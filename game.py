@@ -4,7 +4,8 @@
 import pygame
 pygame.init()
 
-screen = pygame.display.set_mode((640, 480))    # The game window
+# The game window
+screen = pygame.display.set_mode((640, 480))
 
 # Title and icon
 pygame.display.set_caption('Dungeon Explorer')
@@ -12,12 +13,12 @@ pygame.display.set_caption('Dungeon Explorer')
 # pygame.display.set_icon(icon)
 
 player_img = pygame.image.load('img/player.png')
-player_x = 320
-player_y = 240
+x = 320
+y = 240
 
 
 def player():
-    screen.blit(player_img, (player_x, player_y))
+    screen.blit(player_img, (x, y))
 
 
 # The game loop
@@ -27,8 +28,19 @@ while running:
     screen.fill((255, 255, 255))
 
     for event in pygame.event.get():            # When input is...
+
         if event.type == pygame.QUIT:           # Exit
             running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:      # Left arrow
+                x -= 32
+            if event.key == pygame.K_RIGHT:     # Right arrow
+                x += 32
+            if event.key == pygame.K_UP:        # Up arrow
+                y -= 32
+            if event.key == pygame.K_DOWN:      # Down arrow
+                y += 32
 
     player()
 
