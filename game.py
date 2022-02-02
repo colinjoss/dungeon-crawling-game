@@ -13,19 +13,25 @@ pygame.display.set_caption('Dungeon Explorer')
 # pygame.display.set_icon(icon)
 
 player_img = pygame.image.load('img/player.png')
-x = 320
-y = 240
+px = 320
+py = 240
+
+bg_img = pygame.image.load('img/cave.png')
+
+bg_size = bg_img.get_size()
+x = 0
+y = 0
 
 
 def player():
-    screen.blit(player_img, (x, y))
+    screen.blit(player_img, (px, py))
 
 
 # The game loop
 running = True
 while running:
 
-    screen.fill((255, 255, 255))
+    screen.blit(bg_img, (x, y))
 
     for event in pygame.event.get():            # When input is...
 
@@ -34,13 +40,13 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:      # Left arrow
-                x -= 32
-            if event.key == pygame.K_RIGHT:     # Right arrow
                 x += 32
+            if event.key == pygame.K_RIGHT:     # Right arrow
+                x -= 32
             if event.key == pygame.K_UP:        # Up arrow
-                y -= 32
-            if event.key == pygame.K_DOWN:      # Down arrow
                 y += 32
+            if event.key == pygame.K_DOWN:      # Down arrow
+                y -= 32
 
     player()
 
