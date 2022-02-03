@@ -32,36 +32,23 @@ n_bound = 240
 w_bound = 320
 s_bound = n_bound - map_size[1] + 32
 e_bound = w_bound - map_size[0] + 32
-print(map_size[0], map_size[1])
 print(f"N: {n_bound} E: {e_bound} S: {s_bound} W: {w_bound}")
-
-
-print(map_size)
 print(x, y)
-
-
-KEYS = pygame.key.get_pressed()
 
 
 def player():
     screen.blit(player_img, (px, py))
 
 
-
-
-
-print(round_up_32(100))
-
-
 def x_boundary(x, change):
-    #if x + change > 0 or x + change < -2272:
-        #return 0
+    if x + change < e_bound or x + change > w_bound:
+        return 0
     return change
 
 
 def y_boundary(y, change):
-    #if (y + change) > 0 or (y + change) < -1704:
-        #return 0
+    if y + change > n_bound or y + change < s_bound:
+        return 0
     return change
 
 
