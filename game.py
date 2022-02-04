@@ -16,7 +16,7 @@ player_img = pygame.image.load('img/player.png')
 px = 320
 py = 240
 
-bg_img = pygame.image.load('img/grid2.png')
+bg_img = pygame.image.load('img/grid.png')
 
 
 def round_multiple_32(n):
@@ -26,12 +26,17 @@ def round_multiple_32(n):
 
 
 map_size = bg_img.get_size()
+map_x = map_size[0] - 640
+map_y = map_size[1] - 640
+print(map_x, map_y)
+
 x = 320 - round_multiple_32(map_size[0] // 2)
 y = 240 - round_multiple_32(map_size[1] // 2)
-n_bound = 240
-w_bound = 320
-s_bound = n_bound - map_size[1] + 32
-e_bound = w_bound - map_size[0] + 32
+
+n_bound = -80
+w_bound = 0
+s_bound = n_bound - map_y + 32
+e_bound = w_bound - map_x + 32
 print(f"N: {n_bound} E: {e_bound} S: {s_bound} W: {w_bound}")
 print(x, y)
 
