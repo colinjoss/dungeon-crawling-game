@@ -19,10 +19,7 @@ class Game:
 
     def __init__(self):
         self.map = Map()
-        self.player = Player(
-            self.map.get_center()[0][0],
-            self.map.get_center()[1]
-        )
+        self.player = Player(self.map.get_center()[0][0], self.map.get_center()[1])
 
         self.title_menu()
 
@@ -92,7 +89,7 @@ class Game:
         running = True
         while running:
 
-            self.SCREEN.blit(self.map.bg, (self.player.x, self.player.y))
+            self.SCREEN.blit(self.map.get_bg_image(), (self.player.get_x(), self.player.get_y()))
 
             for event in pygame.event.get():  # When input is...
 
@@ -104,25 +101,25 @@ class Game:
 
                     # Player movement
                     if event.key == pygame.K_LEFT:
-                        if not self.map.player_at_x_boundary(self.player.x + 32):
+                        if not self.map.player_at_x_boundary(self.player.get_x() + 32):
                             self.player.move_left()
                     if event.key == pygame.K_RIGHT:
-                        if not self.map.player_at_x_boundary(self.player.x + -32):
+                        if not self.map.player_at_x_boundary(self.player.get_x() + -32):
                             self.player.move_right()
                     if event.key == pygame.K_UP:
-                        if not self.map.player_at_y_boundary(self.player.y + 32):
+                        if not self.map.player_at_y_boundary(self.player.get_y() + 32):
                             self.player.move_up()
                     if event.key == pygame.K_DOWN:
-                        if not self.map.player_at_y_boundary(self.player.y + -32):
+                        if not self.map.player_at_y_boundary(self.player.get_y() + -32):
                             self.player.move_down()
 
-                    print(self.player.x, self.player.y)
+                    print(self.player.get_x(), self.player.get_y())
 
                     # Presses x (BAG MENU)
                     if event.key == pygame.K_x:
                         self.bag_menu()
 
-            self.SCREEN.blit(self.player.image, (self.CENTER[0], self.CENTER[1]))
+            self.SCREEN.blit(self.player.get_sprite(), (self.CENTER[0], self.CENTER[1]))
 
             pygame.display.update()
 
@@ -238,6 +235,9 @@ class Map:
         self.s_bound = self.n_bound - self.height + 32
         self.e_bound = self.w_bound - self.width + 32
 
+    def get_bg_image(self):
+        return self.bg
+
     def get_size(self):
         return self.size
 
@@ -296,9 +296,19 @@ class Map:
 class Player:
 
     def __init__(self, x, y):
-        self.image = pygame.image.load('img/player1.png')
+        self.sprite = pygame.image.load('img/player1.png')
         self.x = x
         self.y = y
+        self.health = 1
+
+    def get_x(self):
+        return self.x
+
+    def get_y(self):
+        return self.y
+
+    def get_sprite(self):
+        return self.sprite
 
     def move_right(self):
         self.x += -32
