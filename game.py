@@ -231,12 +231,73 @@ class Game:
                         print('SETTINGS')
 
                     if event.key == pygame.K_z and quit_select is True:
-                        pygame.quit()
+                        self.quit_dialogue()
 
                     if event.key == pygame.K_ESCAPE:
                         running = False
 
                 pygame.display.update()
+
+    def quit_dialogue(self):
+        quit_title = self.TITLE_MENU_FONT.render('ALL PROGRESS WILL BE LOST. QUIT?', True, 'white')
+        quit_title_surface = quit_title.get_rect()
+        quit_title_surface.center = (320, 140)
+
+        yes_text = self.BAG_MENU_FONT.render('Yes', True, 'white')
+        yes_text_surface = yes_text.get_rect()
+        yes_text_surface.center = (320, 200)
+
+        no_text = self.BAG_MENU_FONT.render('No', True, 'Red')
+        no_text_surface = no_text.get_rect()
+        no_text_surface.center = (320, 260)
+
+        quit_select = False
+        running = True
+        while running:
+            self.SCREEN.fill((0, 0, 0))
+            self.SCREEN.blit(quit_title, quit_title_surface)
+            self.SCREEN.blit(yes_text, yes_text_surface)
+            self.SCREEN.blit(no_text, no_text_surface)
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:  # Exit
+                    pygame.quit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        yes_text = self.BAG_MENU_FONT.render('Yes', True, 'Red')
+                        yes_text_surface = yes_text.get_rect()
+                        yes_text_surface.center = (320, 200)
+
+                        no_text = self.BAG_MENU_FONT.render('No', True, 'White')
+                        no_text_surface = no_text.get_rect()
+                        no_text_surface.center = (320, 260)
+
+                        quit_select = True
+                        break
+
+                    if event.key == pygame.K_DOWN:
+                        yes_text = self.BAG_MENU_FONT.render('Yes', True, 'white')
+                        yes_text_surface = yes_text.get_rect()
+                        yes_text_surface.center = (320, 200)
+
+                        no_text = self.BAG_MENU_FONT.render('No', True, 'Red')
+                        no_text_surface = no_text.get_rect()
+                        no_text_surface.center = (320, 260)
+
+                        quit_select = False
+                        break
+
+                    if event.key == pygame.K_z:
+                        running = False
+
+                pygame.display.update()
+
+        if quit_select:
+            pass
+        else:
+            pass
 
 
 class Map:
