@@ -13,13 +13,15 @@ class Game:
     pygame.display.set_caption('Dungeon Explorer')      # Title
 
     SCREEN = pygame.display.set_mode((640, 480))        # The game window
+    TITLE_FONT = pygame.font.Font('freesansbold.ttf', 32)
+    TITLE_MENU_FONT = pygame.font.Font('freesansbold.ttf', 24)
     TITLE_MENU = pygame_menu.Menu('Welcome', 640, 480)
     PLAYER_IMG = pygame.image.load('img/player1.png')    # Player image
     PLAYER_X = 320
     PLAYER_Y = 240
 
     def __init__(self):
-        self.bg = self.get_image()
+        self.bg = self.get_new_bg()
         self.map_size = self.get_map_size()
         self.map_width = self.map_size[0] - 640
         self.map_height = self.map_size[1] - 640
@@ -30,7 +32,65 @@ class Game:
         self.s_bound = self.n_bound - self.map_height + 32
         self.e_bound = self.w_bound - self.map_width + 32
 
-        self.start()
+        self.title_menu()
+
+    def title_menu(self):
+        title = self.TITLE_FONT.render('D U N G E O N', True, 'white')
+        title_surface = title.get_rect()
+        title_surface.center = (320, 150)
+
+        start_text = self.TITLE_MENU_FONT.render('start', True, 'red')
+        start_text_surface = start_text.get_rect()
+        start_text_surface.center = (320, 260)
+
+        quit_text = self.TITLE_MENU_FONT.render('quit', True, 'white')
+        quit_text_surface = quit_text.get_rect()
+        quit_text_surface.center = (320, 300)
+
+        start_select = True
+        running = True
+        while running:
+            self.SCREEN.fill((0, 0, 0))
+            self.SCREEN.blit(title, title_surface)
+            self.SCREEN.blit(start_text, start_text_surface)
+            self.SCREEN.blit(quit_text, quit_text_surface)
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:           # Exit
+                    running = False
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:        # Up arrow
+                        start_text = self.TITLE_MENU_FONT.render('start', True, 'red')
+                        start_text_surface = start_text.get_rect()
+                        start_text_surface.center = (320, 260)
+
+                        quit_text = self.TITLE_MENU_FONT.render('quit', True, 'white')
+                        quit_text_surface = quit_text.get_rect()
+                        quit_text_surface.center = (320, 300)
+
+                        start_select = True
+
+                    if event.key == pygame.K_DOWN:      # Down arrow
+                        start_text = self.TITLE_MENU_FONT.render('start', True, 'white')
+                        start_text_surface = start_text.get_rect()
+                        start_text_surface.center = (320, 260)
+
+                        quit_text = self.TITLE_MENU_FONT.render('quit', True, 'red')
+                        quit_text_surface = quit_text.get_rect()
+                        quit_text_surface.center = (320, 300)
+
+                        start_select = False
+
+                    if event.key == pygame.K_z and start_select is True:
+                        self.start()
+
+                    if event.key == pygame.K_z and start_select is False:
+                        running = False
+
+
+                pygame.display.update()
 
     def start(self):
         self.game_loop()
@@ -74,8 +134,7 @@ class Game:
             return 0
         return change
 
-    @staticmethod
-    def round_multiple_32(n):
+    def round_multiple_32(self, n):
         if n % 32 != 0:
             return n - (n % 32)
         return n
@@ -83,23 +142,30 @@ class Game:
     def get_map_size(self):
         return self.bg.get_size()
 
-    def get_image(self):
-        bg = Image.open('img/jungle.jpg')
-        width, height = bg.size
+    def get_new_bg(self):
+        filepath = self.request_image()
+        return self.formatted_bg(filepath)
+
+    def request_image(self):
+        # MICROSERVICE
+        filepath = 'img/jungle.jpg'
+        return filepath
+
+    def formatted_bg(self, filepath):
+        bg = Image.open(filepath)                   # Open image
+        width, height = bg.size                     # Get dimensions
         width = self.round_multiple_32(width)
-        height = self.round_multiple_32(height)
+        height = self.round_multiple_32(height)     # Adjust dimensions to fit 32x32 grid
         bg.crop((width, height, width, height))
-        cropped_size = (width, height)
+        cropped_size = (width, height)              # Crop image
         bg.resize(cropped_size)
 
-        true_size = (width + 640, height + 640)
-        black_border = Image.new("RGB", true_size)  ## luckily, this is already black!
-        black_border.paste(bg, ((true_size[0] - width) // 2, (true_size[1] - height) // 2))
+        new_size = (width + 640, height + 640)      # Adjust dimensions again for black border
+        bg_border = Image.new("RGB", new_size)
+        bg_border.paste(bg, ((new_size[0] - width) // 2, (new_size[1] - height) // 2))
 
-        black_border.save('img/jungle2.jpg')
-
-        return pygame.image.load('img/jungle2.jpg')
-
+        bg_border.save('img/bg_jungle.jpg')         # Save as new image (temporary)
+        return pygame.image.load('img/bg_jungle.jpg')
 
 
 if __name__ == '__main__':
