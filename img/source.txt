@@ -1,2 +1,3 @@
 black circle: creator: Freepik from flaticon.com
 cave picture: creator: dkiggens from freeimages.com
+jungle: creator: Yoal Desurmont from unsplash

@@ -19,16 +19,16 @@ class Game:
     PLAYER_Y = 240
 
     def __init__(self):
-        self.bg = pygame.image.load('img/grid1.png')
-        self.map_size = self.bg.get_size()
-        self.map_length = self.map_size[0] - 640
+        self.bg = self.get_image()
+        self.map_size = self.get_map_size()
+        self.map_width = self.map_size[0] - 640
         self.map_height = self.map_size[1] - 640
-        self.x = 320 - self.round_multiple_32(self.map_length // 2)
+        self.x = 320 - self.round_multiple_32(self.map_width // 2)
         self.y = 240 - self.round_multiple_32(self.map_height // 2)
         self.n_bound = -80
         self.w_bound = 0
         self.s_bound = self.n_bound - self.map_height + 32
-        self.e_bound = self.w_bound - self.map_length + 32
+        self.e_bound = self.w_bound - self.map_width + 32
 
         self.start()
 
@@ -79,6 +79,27 @@ class Game:
         if n % 32 != 0:
             return n - (n % 32)
         return n
+
+    def get_map_size(self):
+        return self.bg.get_size()
+
+    def get_image(self):
+        bg = Image.open('img/jungle.jpg')
+        width, height = bg.size
+        width = self.round_multiple_32(width)
+        height = self.round_multiple_32(height)
+        bg.crop((width, height, width, height))
+        cropped_size = (width, height)
+        bg.resize(cropped_size)
+
+        true_size = (width + 640, height + 640)
+        black_border = Image.new("RGB", true_size)  ## luckily, this is already black!
+        black_border.paste(bg, ((true_size[0] - width) // 2, (true_size[1] - height) // 2))
+
+        black_border.save('img/jungle2.jpg')
+
+        return pygame.image.load('img/jungle2.jpg')
+
 
 
 if __name__ == '__main__':
