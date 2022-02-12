@@ -14,7 +14,7 @@ class Game:
 
     SCREEN = pygame.display.set_mode((640, 480))        # The game window
     TITLE_MENU = pygame_menu.Menu('Welcome', 640, 480)
-    PLAYER_IMG = pygame.image.load('img/player.png')    # Player image
+    PLAYER_IMG = pygame.image.load('img/player1.png')    # Player image
     PLAYER_X = 320
     PLAYER_Y = 240
 
