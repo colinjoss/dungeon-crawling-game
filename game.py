@@ -299,7 +299,13 @@ class Player:
         self.sprite = pygame.image.load('img/player1.png')
         self.x = x
         self.y = y
-        self.health = 1
+        self.health_cap = 1
+        self.health_current = 1
+        self.items = {
+            'gold': 0,
+            'jewel': 0,
+            'potion': 1
+        }
 
     def get_x(self):
         return self.x
@@ -309,6 +315,36 @@ class Player:
 
     def get_sprite(self):
         return self.sprite
+
+    def get_current_health(self):
+        return self.health_current
+
+    def get_health_cap(self):
+        return self.health_cap
+
+    def get_items(self):
+        return self.items
+
+    def use_item(self, item):
+        if self.items[item] != 0:
+            self.items[item] -= 1
+
+        # Item effect
+
+    def increase_health(self, n):
+        self.health_current += n
+
+        if self.health_current > self.health_cap:
+            self.health_current = self.health_cap
+
+    def decrease_health(self, n):
+        self.health_current -= n
+
+        if self.health_current < 0:
+            self.health_current = 0
+
+    def increase_health_cap(self, n):
+        self.health_cap += n
 
     def move_right(self):
         self.x += -32
