@@ -14,8 +14,10 @@ class Game:
 
     SCREEN = pygame.display.set_mode((640, 480))        # The game window
     TITLE_FONT = pygame.font.Font('freesansbold.ttf', 32)
-    TITLE_MENU_FONT = pygame.font.Font('freesansbold.ttf', 24)
-    TITLE_MENU = pygame_menu.Menu('Welcome', 640, 480)
+    TITLE_MENU_FONT = pygame.font.Font('freesansbold.ttf', 28)
+    BAG_MENU_FONT = pygame.font.Font('freesansbold.ttf', 24)
+
+
     PLAYER_IMG = pygame.image.load('img/player1.png')    # Player image
     PLAYER_X = 320
     PLAYER_Y = 240
@@ -84,13 +86,14 @@ class Game:
                         start_select = False
 
                     if event.key == pygame.K_z and start_select is True:
-                        self.start()
-
-                    if event.key == pygame.K_z and start_select is False:
                         running = False
 
+                    if event.key == pygame.K_z and start_select is False:
+                        pygame.quit()
 
                 pygame.display.update()
+
+        self.start()
 
     def start(self):
         self.game_loop()
@@ -103,9 +106,11 @@ class Game:
 
             for event in pygame.event.get():  # When input is...
 
+                # Hitting X button in game window
                 if event.type == pygame.QUIT:  # Exit
                     running = False
 
+                # Player movement
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:      # Left arrow
                         self.x += self.x_boundary(32)
@@ -117,9 +122,112 @@ class Game:
                         self.y += self.y_boundary(-32)
                     print(self.x, self.y)
 
+                # Presses x (BAG MENU)
+                if event.key == pygame.K_x:
+                    self.bag_menu()
+
             self.player()
 
             pygame.display.update()
+
+    def bag_menu(self):
+        items_text = self.BAG_MENU_FONT.render('items', True, 'red')
+        items_text_surface = items_text.get_rect()
+        items_text_surface.center = (320, 140)
+
+        settings_text = self.BAG_MENU_FONT.render('settings', True, 'white')
+        settings_text_surface = settings_text.get_rect()
+        settings_text_surface.center = (320, 200)
+
+        quit_text = self.BAG_MENU_FONT.render('quit game', True, 'white')
+        quit_text_surface = quit_text.get_rect()
+        quit_text_surface.center = (320, 260)
+
+        items_select = True
+        settings_select = False
+        quit_select = False
+        running = True
+        while running:
+            self.SCREEN.fill((0, 0, 0))
+            self.SCREEN.blit(items_text, items_text_surface)
+            self.SCREEN.blit(settings_text, settings_text_surface)
+            self.SCREEN.blit(quit_text, quit_text_surface)
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:  # Exit
+                    running = False
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP and quit_select is True:
+                        settings_text = self.BAG_MENU_FONT.render('settings', True, 'red')
+                        settings_text_surface = settings_text.get_rect()
+                        settings_text_surface.center = (320, 200)
+
+                        quit_text = self.BAG_MENU_FONT.render('quit game', True, 'white')
+                        quit_text_surface = quit_text.get_rect()
+                        quit_text_surface.center = (320, 260)
+
+                        settings_select = True
+                        quit_select = False
+
+                        break
+
+                    if event.key == pygame.K_UP and settings_select is True:
+                        items_text = self.BAG_MENU_FONT.render('items', True, 'red')
+                        items_text_surface = items_text.get_rect()
+                        items_text_surface.center = (320, 140)
+
+                        settings_text = self.BAG_MENU_FONT.render('settings', True, 'white')
+                        settings_text_surface = settings_text.get_rect()
+                        settings_text_surface.center = (320, 200)
+
+                        items_select = True
+                        settings_select = False
+
+                        break
+
+                    if event.key == pygame.K_DOWN and items_select is True:
+                        items_text = self.BAG_MENU_FONT.render('items', True, 'white')
+                        items_text_surface = items_text.get_rect()
+                        items_text_surface.center = (320, 140)
+
+                        settings_text = self.BAG_MENU_FONT.render('settings', True, 'red')
+                        settings_text_surface = settings_text.get_rect()
+                        settings_text_surface.center = (320, 200)
+
+                        settings_select = True
+                        items_select = False
+
+                        break
+
+                    if event.key == pygame.K_DOWN and settings_select is True:
+                        settings_text = self.BAG_MENU_FONT.render('settings', True, 'white')
+                        settings_text_surface = settings_text.get_rect()
+                        settings_text_surface.center = (320, 200)
+
+                        quit_text = self.BAG_MENU_FONT.render('quit game', True, 'red')
+                        quit_text_surface = quit_text.get_rect()
+                        quit_text_surface.center = (320, 260)
+
+                        quit_select = True
+                        settings_select = False
+
+                        break
+
+                    if event.key == pygame.K_z and items_select is True:
+                        print('ITEMS')
+
+                    if event.key == pygame.K_z and settings_select is True:
+                        print('SETTINGS')
+
+                    if event.key == pygame.K_z and quit_select is True:
+                        pygame.quit()
+
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+
+                pygame.display.update()
 
     def player(self):
         self.SCREEN.blit(self.PLAYER_IMG, (self.PLAYER_X, self.PLAYER_Y))
