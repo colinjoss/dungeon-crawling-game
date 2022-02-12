@@ -11,7 +11,6 @@ pygame.init()
 class Game:
 
     pygame.display.set_caption('Dungeon Explorer')      # Title
-
     SCREEN = pygame.display.set_mode((640, 480))        # The game window
     TITLE_FONT = pygame.font.Font('freesansbold.ttf', 32)
     TITLE_MENU_FONT = pygame.font.Font('freesansbold.ttf', 28)
@@ -21,9 +20,10 @@ class Game:
     def __init__(self):
         self.map = Map()
         self.player = Player(
-            320 - self.round_multiple_32(self.map.width // 2),
-            240 - self.round_multiple_32(self.map.height // 2)
+            self.map.get_center()[0][0],
+            self.map.get_center()[1]
         )
+
         self.title_menu()
 
     def title_menu(self):
@@ -103,14 +103,19 @@ class Game:
                 if event.type == pygame.KEYDOWN:
 
                     # Player movement
-                    if event.key == pygame.K_LEFT:      # Left arrow
-                        self.player.left(self.x_boundary(32))
-                    if event.key == pygame.K_RIGHT:     # Right arrow
-                        self.player.right(self.x_boundary(-32))
-                    if event.key == pygame.K_UP:        # Up arrow
-                        self.player.up(self.y_boundary(32))
-                    if event.key == pygame.K_DOWN:      # Down arrow
-                        self.player.down(self.y_boundary(-32))
+                    if event.key == pygame.K_LEFT:
+                        if not self.map.player_at_x_boundary(self.player.x + 32):
+                            self.player.move_left()
+                    if event.key == pygame.K_RIGHT:
+                        if not self.map.player_at_x_boundary(self.player.x + -32):
+                            self.player.move_right()
+                    if event.key == pygame.K_UP:
+                        if not self.map.player_at_y_boundary(self.player.y + 32):
+                            self.player.move_up()
+                    if event.key == pygame.K_DOWN:
+                        if not self.map.player_at_y_boundary(self.player.y + -32):
+                            self.player.move_down()
+
                     print(self.player.x, self.player.y)
 
                     # Presses x (BAG MENU)
@@ -220,27 +225,12 @@ class Game:
 
                 pygame.display.update()
 
-    def x_boundary(self, change):
-        if self.player.x + change < self.map.e_bound or self.player.x + change > self.map.w_bound:
-            return 0
-        return change
-
-    def y_boundary(self, change):
-        if self.player.y + change > self.map.n_bound or self.player.y + change < self.map.s_bound:
-            return 0
-        return change
-
-    def round_multiple_32(self, n):
-        if n % 32 != 0:
-            return n - (n % 32)
-        return n
-
 
 class Map:
 
     def __init__(self):
         self.bg = self.get_new_bg()
-        self.size = self.get_map_size()
+        self.size = self.bg.get_size()
         self.width = self.size[0] - 640
         self.height = self.size[1] - 640
         self.n_bound = -80
@@ -248,8 +238,19 @@ class Map:
         self.s_bound = self.n_bound - self.height + 32
         self.e_bound = self.w_bound - self.width + 32
 
-    def get_map_size(self):
-        return self.bg.get_size()
+    def get_size(self):
+        return self.size
+
+    def get_width(self):
+        return self.width
+
+    def get_height(self):
+        return self.height
+
+    def get_center(self):
+        x = 320 - self.round_multiple_32(self.get_width() // 2),
+        y = 240 - self.round_multiple_32(self.get_height() // 2)
+        return x, y
 
     def get_new_bg(self):
         filepath = self.request_image()
@@ -281,6 +282,16 @@ class Map:
             return n - (n % 32)
         return n
 
+    def player_at_x_boundary(self, x_coord):
+        if x_coord < self.e_bound or x_coord > self.w_bound:
+            return True
+        return False
+
+    def player_at_y_boundary(self, y_coord):
+        if y_coord > self.n_bound or y_coord < self.s_bound:
+            return True
+        return False
+
 
 class Player:
 
@@ -289,17 +300,17 @@ class Player:
         self.x = x
         self.y = y
 
-    def right(self, amount):
-        self.x += amount
+    def move_right(self):
+        self.x += -32
 
-    def left(self, amount):
-        self.x += amount
+    def move_left(self):
+        self.x += 32
 
-    def up(self, amount):
-        self.y += amount
+    def move_up(self):
+        self.y += 32
 
-    def down(self, amount):
-        self.y += amount
+    def move_down(self):
+        self.y += -32
 
 
 if __name__ == '__main__':
