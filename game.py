@@ -2,86 +2,84 @@
 # Last date updated: 2/2/2022
 
 import pygame
+from PIL import Image
+import pygame_menu
+
 pygame.init()
 
-# The game window
-screen = pygame.display.set_mode((640, 480))
 
-# Title and icon
-pygame.display.set_caption('Dungeon Explorer')
-# icon = pygame.image.load("file.png")
-# pygame.display.set_icon(icon)
+class Game:
 
-player_img = pygame.image.load('img/player.png')
-px = 320
-py = 240
+    pygame.display.set_caption('Dungeon Explorer')      # Title
 
-bg_img = pygame.image.load('img/grid.png')
+    SCREEN = pygame.display.set_mode((640, 480))        # The game window
+    TITLE_MENU = pygame_menu.Menu('Welcome', 640, 480)
+    PLAYER_IMG = pygame.image.load('img/player.png')    # Player image
+    PLAYER_X = 320
+    PLAYER_Y = 240
 
+    def __init__(self):
+        self.bg = pygame.image.load('img/grid1.png')
+        self.map_size = self.bg.get_size()
+        self.map_length = self.map_size[0] - 640
+        self.map_height = self.map_size[1] - 640
+        self.x = 320 - self.round_multiple_32(self.map_length // 2)
+        self.y = 240 - self.round_multiple_32(self.map_height // 2)
+        self.n_bound = -80
+        self.w_bound = 0
+        self.s_bound = self.n_bound - self.map_height + 32
+        self.e_bound = self.w_bound - self.map_length + 32
 
-def round_multiple_32(n):
-    if n % 32 != 0:
-        return n - (n % 32)
-    return n
+        self.start()
 
+    def start(self):
+        self.game_loop()
 
-map_size = bg_img.get_size()
-map_x = map_size[0] - 640
-map_y = map_size[1] - 640
-print(map_x, map_y)
+    def game_loop(self):
+        running = True
+        while running:
 
-x = 320 - round_multiple_32(map_size[0] // 2)
-y = 240 - round_multiple_32(map_size[1] // 2)
+            self.SCREEN.blit(self.bg, (self.x, self.y))
 
-n_bound = -80
-w_bound = 0
-s_bound = n_bound - map_y + 32
-e_bound = w_bound - map_x + 32
-print(f"N: {n_bound} E: {e_bound} S: {s_bound} W: {w_bound}")
-print(x, y)
+            for event in pygame.event.get():  # When input is...
 
+                if event.type == pygame.QUIT:  # Exit
+                    running = False
 
-def player():
-    screen.blit(player_img, (px, py))
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:      # Left arrow
+                        self.x += self.x_boundary(32)
+                    if event.key == pygame.K_RIGHT:     # Right arrow
+                        self.x += self.x_boundary(-32)
+                    if event.key == pygame.K_UP:        # Up arrow
+                        self.y += self.y_boundary(32)
+                    if event.key == pygame.K_DOWN:      # Down arrow
+                        self.y += self.y_boundary(-32)
+                    print(self.x, self.y)
 
+            self.player()
 
-def x_boundary(x, change):
-    if x + change < e_bound or x + change > w_bound:
-        return 0
-    return change
+            pygame.display.update()
 
+    def player(self):
+        self.SCREEN.blit(self.PLAYER_IMG, (self.PLAYER_X, self.PLAYER_Y))
 
-def y_boundary(y, change):
-    if y + change > n_bound or y + change < s_bound:
-        return 0
-    return change
+    def x_boundary(self, change):
+        if self.x + change < self.e_bound or self.x + change > self.w_bound:
+            return 0
+        return change
 
+    def y_boundary(self, change):
+        if self.y + change > self.n_bound or self.y + change < self.s_bound:
+            return 0
+        return change
 
-# The game loop
-running = True
-while running:
-
-    screen.blit(bg_img, (x, y))
-
-    for event in pygame.event.get():            # When input is...
-
-        if event.type == pygame.QUIT:           # Exit
-            running = False
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:      # Left arrow
-                x += x_boundary(x, 32)
-            if event.key == pygame.K_RIGHT:     # Right arrow
-                x += x_boundary(x, -32)
-            if event.key == pygame.K_UP:        # Up arrow
-                y += y_boundary(y, 32)
-            if event.key == pygame.K_DOWN:      # Down arrow
-                y += y_boundary(y, -32)
-            print(x, y)
-
-    player()
-
-    pygame.display.update()
+    @staticmethod
+    def round_multiple_32(n):
+        if n % 32 != 0:
+            return n - (n % 32)
+        return n
 
 
-
+if __name__ == '__main__':
+    Game()
