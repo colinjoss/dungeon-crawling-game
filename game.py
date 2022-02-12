@@ -18,6 +18,11 @@ class Game:
     BAG_MENU_FONT = pygame.font.Font('freesansbold.ttf', 24)
     CENTER = (320, 240)
 
+    MENU_MUSIC = 'sound/menu.mp3'
+    OVERWORLD_MUSIC = 'sound/overworld.mp3'
+    MENU_MOVE_SOUND = pygame.mixer.Sound('sound/menu_move_sound.wav')
+    MENU_SELECT_SOUND = pygame.mixer.Sound('sound/menu_select_sound.wav')
+
     def __init__(self):
         self.map = Map()
         self.player = Player(self.map.get_center()[0][0], self.map.get_center()[1])
@@ -25,6 +30,9 @@ class Game:
         self.title_menu()
 
     def title_menu(self):
+        pygame.mixer.music.load(self.MENU_MUSIC)
+        pygame.mixer.music.play(-1)
+
         title = self.TITLE_FONT.render('D U N G E O N', True, 'white')
         title_surface = title.get_rect()
         title_surface.center = (320, 150)
@@ -48,10 +56,12 @@ class Game:
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:           # Exit
-                    running = False
+                    pygame.quit()
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:        # Up arrow
+                        pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+
                         start_text = self.TITLE_MENU_FONT.render('start', True, 'red')
                         start_text_surface = start_text.get_rect()
                         start_text_surface.center = (320, 260)
@@ -63,6 +73,8 @@ class Game:
                         start_select = True
 
                     if event.key == pygame.K_DOWN:      # Down arrow
+                        pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+
                         start_text = self.TITLE_MENU_FONT.render('start', True, 'white')
                         start_text_surface = start_text.get_rect()
                         start_text_surface.center = (320, 260)
@@ -74,9 +86,11 @@ class Game:
                         start_select = False
 
                     if event.key == pygame.K_z and start_select is True:
+                        pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
                         running = False
 
                     if event.key == pygame.K_z and start_select is False:
+                        pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
                         pygame.quit()
 
                 pygame.display.update()
@@ -89,9 +103,10 @@ class Game:
             self.SCREEN.blit(self.INSTRUCTIONS, (0, 0))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:  # Exit
-                    running = False
+                    pygame.quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_z:
+                        pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
                         running = False
 
             pygame.display.update()
@@ -99,6 +114,9 @@ class Game:
         self.start()
 
     def start(self):
+        pygame.mixer.music.stop()
+        pygame.mixer.music.load(self.OVERWORLD_MUSIC)
+        pygame.mixer.music.play(-1)
         self.game_loop()
 
     def game_loop(self):
@@ -111,7 +129,7 @@ class Game:
 
                 # Hitting X button in game window
                 if event.type == pygame.QUIT:  # Exit
-                    running = False
+                    pygame.quit()
 
                 if event.type == pygame.KEYDOWN:
 
@@ -133,11 +151,14 @@ class Game:
 
                     # Presses x (BAG MENU)
                     if event.key == pygame.K_x:
-                        self.bag_menu()
+                        if self.bag_menu():
+                            running = False
 
             self.SCREEN.blit(self.player.get_sprite(), (self.CENTER[0], self.CENTER[1]))
 
             pygame.display.update()
+
+        self.title_menu()
 
     def bag_menu(self):
         items_text = self.BAG_MENU_FONT.render('items', True, 'red')
@@ -155,7 +176,9 @@ class Game:
         items_select = True
         settings_select = False
         quit_select = False
+        return_to_menu = False
         running = True
+
         while running:
             self.SCREEN.fill((0, 0, 0))
             self.SCREEN.blit(items_text, items_text_surface)
@@ -169,6 +192,8 @@ class Game:
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP and quit_select is True:
+                        pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+
                         settings_text = self.BAG_MENU_FONT.render('settings', True, 'red')
                         settings_text_surface = settings_text.get_rect()
                         settings_text_surface.center = (320, 200)
@@ -183,6 +208,8 @@ class Game:
                         break
 
                     if event.key == pygame.K_UP and settings_select is True:
+                        pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+
                         items_text = self.BAG_MENU_FONT.render('items', True, 'red')
                         items_text_surface = items_text.get_rect()
                         items_text_surface.center = (320, 140)
@@ -197,6 +224,8 @@ class Game:
                         break
 
                     if event.key == pygame.K_DOWN and items_select is True:
+                        pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+
                         items_text = self.BAG_MENU_FONT.render('items', True, 'white')
                         items_text_surface = items_text.get_rect()
                         items_text_surface.center = (320, 140)
@@ -211,6 +240,8 @@ class Game:
                         break
 
                     if event.key == pygame.K_DOWN and settings_select is True:
+                        pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+
                         settings_text = self.BAG_MENU_FONT.render('settings', True, 'white')
                         settings_text_surface = settings_text.get_rect()
                         settings_text_surface.center = (320, 200)
@@ -225,18 +256,25 @@ class Game:
                         break
 
                     if event.key == pygame.K_z and items_select is True:
+                        pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
                         print('ITEMS')
 
                     if event.key == pygame.K_z and settings_select is True:
+                        pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
                         print('SETTINGS')
 
                     if event.key == pygame.K_z and quit_select is True:
-                        self.quit_dialogue()
+                        pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
+                        if self.quit_dialogue():
+                            return_to_menu = True
+                            running = False
 
                     if event.key == pygame.K_ESCAPE:
                         running = False
 
                 pygame.display.update()
+
+        return return_to_menu
 
     def quit_dialogue(self):
         quit_title = self.TITLE_MENU_FONT.render('ALL PROGRESS WILL BE LOST. QUIT?', True, 'white')
@@ -266,6 +304,8 @@ class Game:
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
+                        pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+
                         yes_text = self.BAG_MENU_FONT.render('Yes', True, 'Red')
                         yes_text_surface = yes_text.get_rect()
                         yes_text_surface.center = (320, 200)
@@ -278,6 +318,8 @@ class Game:
                         break
 
                     if event.key == pygame.K_DOWN:
+                        pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+
                         yes_text = self.BAG_MENU_FONT.render('Yes', True, 'white')
                         yes_text_surface = yes_text.get_rect()
                         yes_text_surface.center = (320, 200)
@@ -290,14 +332,12 @@ class Game:
                         break
 
                     if event.key == pygame.K_z:
+                        pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
                         running = False
 
                 pygame.display.update()
 
-        if quit_select:
-            pass
-        else:
-            pass
+        return quit_select
 
 
 class Map:
