@@ -12,6 +12,7 @@ class Game:
 
     pygame.display.set_caption('Dungeon Explorer')      # Title
     SCREEN = pygame.display.set_mode((640, 480))        # The game window
+    INSTRUCTIONS = pygame.image.load('img/instructions.png')
     TITLE_FONT = pygame.font.Font('freesansbold.ttf', 32)
     TITLE_MENU_FONT = pygame.font.Font('freesansbold.ttf', 28)
     BAG_MENU_FONT = pygame.font.Font('freesansbold.ttf', 24)
@@ -79,6 +80,21 @@ class Game:
                         pygame.quit()
 
                 pygame.display.update()
+
+        self.instructions()
+
+    def instructions(self):
+        running = True
+        while running:
+            self.SCREEN.blit(self.INSTRUCTIONS, (0, 0))
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:  # Exit
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_z:
+                        running = False
+
+            pygame.display.update()
 
         self.start()
 
