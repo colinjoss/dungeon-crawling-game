@@ -23,11 +23,16 @@ class Game:
     MENU_MOVE_SOUND = pygame.mixer.Sound('sound/menu_move_sound.wav')
     MENU_SELECT_SOUND = pygame.mixer.Sound('sound/menu_select_sound.wav')
 
+    MAP_THEMES = ['jungle', 'ocean']
+
     def __init__(self):
-        self.map = Map()
+        self.map = self.new_dungeon('jungle')
         self.player = Player(self.map.get_center()[0][0], self.map.get_center()[1])
 
         self.title_menu()
+
+    def new_dungeon(self, theme):
+        return Map(theme)
 
     def title_menu(self):
         pygame.mixer.music.load(self.MENU_MUSIC)
@@ -342,8 +347,8 @@ class Game:
 
 class Map:
 
-    def __init__(self):
-        self.bg = self.get_new_bg()
+    def __init__(self, theme):
+        self.bg = self.new_bg(theme)
         self.size = self.bg.get_size()
         self.width = self.size[0] - 640
         self.height = self.size[1] - 640
@@ -369,16 +374,16 @@ class Map:
         y = 240 - self.round_multiple_32(self.get_height() // 2)
         return x, y
 
-    def get_new_bg(self):
-        filepath = self.request_image()
-        return self.formatted_bg(filepath)
+    def new_bg(self, keyword):
+        filepath = self.request_image(keyword)
+        return self.formatted_bg(filepath, keyword)
 
-    def request_image(self):
+    def request_image(self, keyword):
         # MICROSERVICE
-        filepath = 'img/jungle.jpg'
+        filepath = 'img/' + keyword + '.jpg'
         return filepath
 
-    def formatted_bg(self, filepath):
+    def formatted_bg(self, filepath, keyword):
         bg = Image.open(filepath)                   # Open image
         width, height = bg.size                     # Get dimensions
         width = self.round_multiple_32(width)
@@ -391,8 +396,8 @@ class Map:
         bg_border = Image.new("RGB", new_size)
         bg_border.paste(bg, ((new_size[0] - width) // 2, (new_size[1] - height) // 2))
 
-        bg_border.save('img/bg_jungle.jpg')         # Save as new image (temporary)
-        return pygame.image.load('img/bg_jungle.jpg')
+        bg_border.save('img/bg_'+ keyword + '.jpg')         # Save as new image (temporary)
+        return pygame.image.load('img/bg_'+ keyword + '.jpg')
 
     def round_multiple_32(self, n):
         if n % 32 != 0:
@@ -474,6 +479,17 @@ class Player:
 
     def move_down(self):
         self.y += -32
+
+
+class Item:
+    def __init__(self, image, description):
+        self.image = pygame.image.load(image)
+        self.description = description
+
+
+class Jewel(Item):
+    def __init__(self, image):
+        super().__init__(image, 'A valuable jewel')
 
 
 if __name__ == '__main__':
