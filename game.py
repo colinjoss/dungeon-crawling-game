@@ -3,6 +3,7 @@
 
 import pygame
 from PIL import Image
+import random
 
 
 pygame.init()
@@ -26,13 +27,12 @@ class Game:
     MAP_THEMES = ['jungle', 'ocean']
 
     def __init__(self):
-        self.map = self.new_dungeon('jungle')
+        self.map = self.new_dungeon('jungle', 'img/jewel_blue.png')
         self.player = Player(self.map.get_center()[0][0], self.map.get_center()[1])
-
         self.title_menu()
 
-    def new_dungeon(self, theme):
-        return Map(theme)
+    def new_dungeon(self, theme, jewel):
+        return Map(theme, jewel)
 
     def title_menu(self):
         pygame.mixer.music.load(self.MENU_MUSIC)
@@ -125,10 +125,15 @@ class Game:
         self.game_loop()
 
     def game_loop(self):
+        new_level = False
         running = True
         while running:
 
             self.SCREEN.blit(self.map.get_bg_image(), (self.player.get_x(), self.player.get_y()))
+
+            if (self.player.get_x(), self.player.get_y()) == (-2976, -2064):
+                new_level = True
+                running = False
 
             for event in pygame.event.get():  # When input is...
 
@@ -152,7 +157,7 @@ class Game:
                         if not self.map.player_at_y_boundary(self.player.get_y() + -32):
                             self.player.move_down()
 
-                    print(self.player.get_x(), self.player.get_y())
+                    print('player:', self.player.get_x(), self.player.get_y())
 
                     # Presses x (BAG MENU)
                     if event.key == pygame.K_x:
@@ -163,7 +168,12 @@ class Game:
 
             pygame.display.update()
 
-        self.title_menu()
+        if new_level:
+            self.map = self.new_dungeon('ocean', 'img/jewel_blue.png')
+            self.player = Player(self.map.get_center()[0][0], self.map.get_center()[1])
+            self.game_loop()
+        else:
+            self.title_menu()
 
     def bag_menu(self):
         items_text = self.BAG_MENU_FONT.render('items', True, 'red')
@@ -347,21 +357,23 @@ class Game:
 
 class Map:
 
-    def __init__(self, theme):
-        self.bg = self.new_bg(theme)
-        self.size = self.bg.get_size()
-        self.width = self.size[0] - 640
-        self.height = self.size[1] - 640
+    def __init__(self, theme, jewel):
+        self.bg = self.request_image(theme)
+        self.format_image(self.bg, jewel)
+        self.bg = self.load_image(self.bg)
+
+        width, height = self.bg.get_size()
+        self.width = width - 640
+        self.height = height - 640
         self.n_bound = -80
         self.w_bound = 0
         self.s_bound = self.n_bound - self.height + 32
         self.e_bound = self.w_bound - self.width + 32
 
+
+
     def get_bg_image(self):
         return self.bg
-
-    def get_size(self):
-        return self.size
 
     def get_width(self):
         return self.width
@@ -374,30 +386,40 @@ class Map:
         y = 240 - self.round_multiple_32(self.get_height() // 2)
         return x, y
 
-    def new_bg(self, keyword):
-        filepath = self.request_image(keyword)
-        return self.formatted_bg(filepath, keyword)
-
     def request_image(self, keyword):
         # MICROSERVICE
-        filepath = 'img/' + keyword + '.jpg'
+        filepath = 'img/' + keyword + '.png'
         return filepath
 
-    def formatted_bg(self, filepath, keyword):
-        bg = Image.open(filepath)                   # Open image
+    def format_image(self, image, jewel):
+        # Crop image dimensions to multiple of 32
+        bg = Image.open(image)                      # Open image
         width, height = bg.size                     # Get dimensions
         width = self.round_multiple_32(width)
         height = self.round_multiple_32(height)     # Adjust dimensions to fit 32x32 grid
         bg.crop((width, height, width, height))
         cropped_size = (width, height)              # Crop image
         bg.resize(cropped_size)
+        print(cropped_size)
 
-        new_size = (width + 640, height + 640)      # Adjust dimensions again for black border
+        # Add jewel
+        jewel_image = Image.open(jewel)
+        # width, height = bg.size
+        bg.paste(jewel_image, (2976, 1984))
+
+        print((2976 * -1), (1984 + 80) * -1)
+
+        # Add a black border around it
+        width, height = bg.size
+        new_size = (width + 640, height + 640)  # Adjust dimensions again for black border
         bg_border = Image.new("RGB", new_size)
         bg_border.paste(bg, ((new_size[0] - width) // 2, (new_size[1] - height) // 2))
 
-        bg_border.save('img/bg_'+ keyword + '.jpg')         # Save as new image (temporary)
-        return pygame.image.load('img/bg_'+ keyword + '.jpg')
+        # Save
+        bg_border.save(image)
+
+    def load_image(self, image):
+        return pygame.image.load(image)
 
     def round_multiple_32(self, n):
         if n % 32 != 0:
@@ -413,6 +435,12 @@ class Map:
         if y_coord > self.n_bound or y_coord < self.s_bound:
             return True
         return False
+
+    def get_random_x(self):
+        return self.round_multiple_32(random.randint(self.e_bound, self.w_bound))
+
+    def get_random_y(self):
+        return self.round_multiple_32(random.randint(self.s_bound, self.n_bound))
 
 
 class Player:
@@ -488,8 +516,22 @@ class Item:
 
 
 class Jewel(Item):
-    def __init__(self, image):
+    def __init__(self, image, x, y):
         super().__init__(image, 'A valuable jewel')
+        self.x = x
+        self.y = y
+
+    def get_image(self):
+        return self.image
+
+    def description(self):
+        return self.description
+
+    def get_x(self):
+        return self.x
+
+    def get_y(self):
+        return self.y
 
 
 if __name__ == '__main__':
