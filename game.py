@@ -4,6 +4,7 @@
 import pygame
 from PIL import Image
 import random
+from generate_bg import work
 
 
 pygame.init()
@@ -12,12 +13,12 @@ pygame.init()
 class Game:
 
     pygame.display.set_caption('Dungeon Explorer')      # Title
-    SCREEN = pygame.display.set_mode((640, 480))        # The game window
+    SCREEN = pygame.display.set_mode((672, 480))        # The game window
     INSTRUCTIONS = pygame.image.load('img/instructions.png')
     TITLE_FONT = pygame.font.Font('freesansbold.ttf', 32)
     TITLE_MENU_FONT = pygame.font.Font('freesansbold.ttf', 28)
     BAG_MENU_FONT = pygame.font.Font('freesansbold.ttf', 24)
-    CENTER = (320, 240)
+    CENTER_SCREEN = (320, 240)
 
     MENU_MUSIC = 'sound/menu.mp3'
     OVERWORLD_MUSIC = 'sound/overworld.mp3'
@@ -27,8 +28,8 @@ class Game:
     MAP_THEMES = ['jungle', 'ocean']
 
     def __init__(self):
-        self.map = self.new_dungeon('jungle', 'img/jewel_blue.png')
-        self.player = Player(self.map.get_center()[0][0], self.map.get_center()[1])
+        self.map = self.new_dungeon('ocean600-1', 'img/jewel_blue.png')
+        self.player = Player(self.map.center)
         self.title_menu()
 
     def new_dungeon(self, theme, jewel):
@@ -164,13 +165,13 @@ class Game:
                         if self.bag_menu():
                             running = False
 
-            self.SCREEN.blit(self.player.get_sprite(), (self.CENTER[0], self.CENTER[1]))
+            self.SCREEN.blit(self.player.get_sprite(), (self.CENTER_SCREEN[0], self.CENTER_SCREEN[1]))
 
             pygame.display.update()
 
         if new_level:
             self.map = self.new_dungeon('ocean', 'img/jewel_blue.png')
-            self.player = Player(self.map.get_center()[0][0], self.map.get_center()[1])
+            self.player = Player((self.map.center[0], self.map.center[1]))
             self.game_loop()
         else:
             self.title_menu()
@@ -358,19 +359,14 @@ class Game:
 class Map:
 
     def __init__(self, theme, jewel):
-        self.bg = self.request_image(theme)
-        self.format_image(self.bg, jewel)
-        self.bg = self.load_image(self.bg)
-
-        width, height = self.bg.get_size()
-        self.width = width - 640
-        self.height = height - 640
+        self.bg = self.format_image(self.request_image(theme), jewel)
+        self.width = self.bg.get_size()[0] - 640
+        self.height = self.bg.get_size()[1] - 640
+        self.center = (0 - self.round_multiple_32(self.width//2), -80 - self.round_multiple_32(self.height//2))
         self.n_bound = -80
         self.w_bound = 0
         self.s_bound = self.n_bound - self.height + 32
         self.e_bound = self.w_bound - self.width + 32
-
-
 
     def get_bg_image(self):
         return self.bg
@@ -392,33 +388,32 @@ class Map:
         return filepath
 
     def format_image(self, image, jewel):
+        bg = Image.open(image, 'r')  # Open image
+
         # Crop image dimensions to multiple of 32
-        bg = Image.open(image)                      # Open image
-        width, height = bg.size                     # Get dimensions
-        width = self.round_multiple_32(width)
-        height = self.round_multiple_32(height)     # Adjust dimensions to fit 32x32 grid
-        bg.crop((width, height, width, height))
-        cropped_size = (width, height)              # Crop image
-        bg.resize(cropped_size)
-        print(cropped_size)
+        new_width = self.round_multiple_32(bg.size[0])
+        new_height = self.round_multiple_32(bg.size[1])  # Adjust dimensions to fit 32x32 grid
+        bg.crop((new_width, new_height, new_width, new_height))
+        bg.resize((new_width, new_height))
 
         # Add jewel
-        jewel_image = Image.open(jewel)
-        # width, height = bg.size
-        bg.paste(jewel_image, (2976, 1984))
+        gem = Image.open(jewel, 'r')
+        bg_with_jewel = Image.new('RGBA', (new_width, new_height), (0, 0, 0, 0))
+        bg_with_jewel.paste(bg, (0, 0))
+        bg_with_jewel.paste(gem, (
+            self.round_multiple_32(random.randint(0, new_width)),
+            self.round_multiple_32(random.randint(0, new_height))),
+            mask=gem)
+        gem.close()
+        bg.close()
 
-        print((2976 * -1), (1984 + 80) * -1)
+        # Add a black border
+        final_size = (new_width + 640, new_height + 640)  # Adjust dimensions again for black border
+        bg_with_border = Image.new('RGB', final_size)
+        bg_with_border.paste(bg_with_jewel, ((final_size[0] - new_width) // 2, (final_size[1] - new_height) // 2))
+        bg_with_jewel.close()
 
-        # Add a black border around it
-        width, height = bg.size
-        new_size = (width + 640, height + 640)  # Adjust dimensions again for black border
-        bg_border = Image.new("RGB", new_size)
-        bg_border.paste(bg, ((new_size[0] - width) // 2, (new_size[1] - height) // 2))
-
-        # Save
-        bg_border.save(image)
-
-    def load_image(self, image):
+        bg_with_border.save(image)
         return pygame.image.load(image)
 
     def round_multiple_32(self, n):
@@ -445,10 +440,10 @@ class Map:
 
 class Player:
 
-    def __init__(self, x, y):
+    def __init__(self, center):
         self.sprite = pygame.image.load('img/player1.png')
-        self.x = x
-        self.y = y
+        self.x = center[0]
+        self.y = center[1]
         self.health_cap = 1
         self.health_current = 1
         self.items = {
@@ -535,4 +530,5 @@ class Jewel(Item):
 
 
 if __name__ == '__main__':
+    work()
     Game()
