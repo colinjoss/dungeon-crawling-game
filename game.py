@@ -23,7 +23,16 @@ class Game:
         self.blocks = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
-        self.player = Player(self, 1, 2)
+
+        self.create_tilemap()
+
+    def create_tilemap(self):
+        for y, row in enumerate(tilemap):
+            for x, col in enumerate(row):
+                if col == 'B':
+                    Block(self, x, y)
+                if col == 'P':
+                    Player(self, x, y)
 
     def events(self):
         for event in pygame.event.get():
