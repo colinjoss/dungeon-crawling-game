@@ -2,6 +2,7 @@ import pygame
 from config import *
 import math
 import random
+import time
 
 
 class SpriteSheet:
@@ -32,6 +33,8 @@ class Player(pygame.sprite.Sprite):
         self.x_change = 0
         self.y_change = 0
 
+        self.movement_delay = 0
+
         self.facing = 'down'
         self.animation_loop = 0
 
@@ -41,115 +44,172 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = self.x
         self.rect.y = self.y
 
-    def update(self):
-        self.movement()
-        self.animate()
+        self.down_animations = [
+            self.game.character_sheet.get_sprite(0, 0, self.width, self.height),
+            self.game.character_sheet.get_sprite(0, 32, self.width, self.height),
+            self.game.character_sheet.get_sprite(0, 64, self.width, self.height),
+            self.game.character_sheet.get_sprite(0, 96, self.width, self.height)
+        ]
+        self.up_animations = [
+            self.game.character_sheet.get_sprite(32, 0, self.width, self.height),
+            self.game.character_sheet.get_sprite(32, 32, self.width, self.height),
+            self.game.character_sheet.get_sprite(32, 64, self.width, self.height),
+            self.game.character_sheet.get_sprite(32, 96, self.width, self.height)
+        ]
+        self.left_animations = [
+            self.game.character_sheet.get_sprite(64, 0, self.width, self.height),
+            self.game.character_sheet.get_sprite(64, 32, self.width, self.height),
+            self.game.character_sheet.get_sprite(64, 64, self.width, self.height),
+            self.game.character_sheet.get_sprite(64, 96, self.width, self.height)
+        ]
+        self.right_animations = [
+            self.game.character_sheet.get_sprite(96, 0, self.width, self.height),
+            self.game.character_sheet.get_sprite(96, 32, self.width, self.height),
+            self.game.character_sheet.get_sprite(96, 64, self.width, self.height),
+            self.game.character_sheet.get_sprite(96, 96, self.width, self.height)
+        ]
 
-        self.rect.x += self.x_change
-        self.collide_blocks('x')
-        self.rect.y += self.y_change
-        self.collide_blocks('y')
+    def update(self):
+        if self.movement_delay < pygame.time.get_ticks():
+
+            self.move_direction()       # Gets keyboard input; sets x/y change  and facing direction
+
+            if self.collides('x') or self.collides('y'):    # Tests move - if collides with block, do not update
+                self.x_change = 0
+                self.y_change = 0
+                return
+
+            self.animate_movement()
 
         self.x_change = 0
         self.y_change = 0
 
-    def movement(self):
+    def move_direction(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.x_change -= PLAYER_SPEED
-            self.facing = 'left'
+            self.facing = LEFT
         if keys[pygame.K_RIGHT]:
             self.x_change += PLAYER_SPEED
-            self.facing = 'right'
+            self.facing = RIGHT
         if keys[pygame.K_DOWN]:
             self.y_change += PLAYER_SPEED
-            self.facing = 'down'
+            self.facing = DOWN
         if keys[pygame.K_UP]:
             self.y_change -= PLAYER_SPEED
-            self.facing = 'up'
+            self.facing = UP
 
-    def collide_blocks(self, direction):
+    def collides(self, direction):
         if direction == 'x':
+            self.rect.x += self.x_change
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
-            if hits:
-                if self.x_change > 0:
-                    self.rect.x = hits[0].rect.left - self.rect.width
-                if self.x_change < 0:
-                    self.rect.x = hits[0].rect.right
+            self.rect.x -= self.x_change
+            return True if hits else False
 
         if direction == 'y':
+            self.rect.y += self.y_change
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
-            if hits:
-                if self.y_change > 0:
-                    self.rect.y = hits[0].rect.top - self.rect.height
-                if self.y_change < 0:
-                    self.rect.y = hits[0].rect.bottom
+            self.rect.y -= self.y_change
+            return True if hits else False
 
-    def animate(self):
-        down_animations = [
-            self.game.character_sheet.get_sprite(0, 0, self.width, self.height),
-            self.game.character_sheet.get_sprite(0, 32, self.width, self.height),
-            self.game.character_sheet.get_sprite(0, 64, self.width, self.height)
-        ]
-        up_animations = [
-            self.game.character_sheet.get_sprite(32, 0, self.width, self.height),
-            self.game.character_sheet.get_sprite(32, 32, self.width, self.height),
-            self.game.character_sheet.get_sprite(32, 64, self.width, self.height)
-        ]
-        left_animations = [
-            self.game.character_sheet.get_sprite(64, 0, self.width, self.height),
-            self.game.character_sheet.get_sprite(64, 32, self.width, self.height),
-            self.game.character_sheet.get_sprite(64, 64, self.width, self.height)
-        ]
-        right_animations = [
-            self.game.character_sheet.get_sprite(96, 0, self.width, self.height),
-            self.game.character_sheet.get_sprite(96, 32, self.width, self.height),
-            self.game.character_sheet.get_sprite(96, 64, self.width, self.height)
-        ]
+    def animate_movement(self):
+        start = 0
+        animation_frame = 16
+        end = 32
 
-        if self.facing == 'down':
+        if self.animation_loop == 2:
+            self.animation_loop = 0
+
+        if self.facing == DOWN:
             if self.y_change == 0:
                 self.image = self.game.character_sheet.get_sprite(0, 0, self.width, self.height)
+                self.animation_loop = 0
             else:
-                self.image = down_animations[math.floor(self.animation_loop)]
-                self.animation_loop += 0.1
-                if self.animation_loop >= 3:
-                    self.animation_loop = 0
+                while start != end:
+                    self.rect.y += 4
 
-        if self.facing == 'up':
+                    if start == animation_frame:
+                        self.animation_loop += 1
+                        self.image = self.down_animations[self.animation_loop]
+
+                    for sprite in self.game.all_sprites:
+                        sprite.rect.y -= 4
+
+                    self.game.draw()
+
+                    start += 4
+
+                self.y_change = 0
+
+        if self.facing == UP:
             if self.y_change == 0:
                 self.image = self.game.character_sheet.get_sprite(32, 0, self.width, self.height)
+                self.animation_loop = 0
             else:
-                self.image = up_animations[math.floor(self.animation_loop)]
-                self.animation_loop += 0.1
-                if self.animation_loop >= 3:
-                    self.animation_loop = 0
+                while start != end:
+                    self.rect.y -= 4
 
-        if self.facing == 'left':
+                    if start == animation_frame:
+                        self.animation_loop += 1
+                        self.image = self.up_animations[self.animation_loop]
+
+                    for sprite in self.game.all_sprites:
+                        sprite.rect.y += 4
+
+                    self.game.draw()
+
+                    start += 4
+
+                self.y_change = 0
+
+        if self.facing == LEFT:
             if self.x_change == 0:
                 self.image = self.game.character_sheet.get_sprite(64, 0, self.width, self.height)
+                self.animation_loop = 0
             else:
-                self.image = left_animations[math.floor(self.animation_loop)]
-                self.animation_loop += 0.1
-                if self.animation_loop >= 3:
-                    self.animation_loop = 0
+                while start != end:
+                    self.rect.x -= 4
 
-        if self.facing == 'right':
+                    for sprite in self.game.all_sprites:
+                        sprite.rect.x += 4
+
+                    if start == animation_frame:
+                        self.animation_loop += 1
+                        self.image = self.left_animations[self.animation_loop]
+
+                    self.game.draw()
+
+                    start += 4
+
+                self.y_change = 0
+
+        if self.facing == RIGHT:
             if self.x_change == 0:
                 self.image = self.game.character_sheet.get_sprite(96, 0, self.width, self.height)
+                self.animation_loop = 0
             else:
-                self.image = right_animations[math.floor(self.animation_loop)]
-                self.animation_loop += 0.1
-                if self.animation_loop >= 3:
-                    self.animation_loop = 0
+                while start != end:
+                    self.rect.x += 4
 
+                    for sprite in self.game.all_sprites:
+                        sprite.rect.x -= 4
+
+                    if start == animation_frame:
+                        self.animation_loop += 1
+                        self.image = self.right_animations[self.animation_loop]
+
+                    self.game.draw()
+
+                    start += 4
+
+                self.y_change = 0
 
 
 class Block(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = BLOCK_LAYER
-        self.groups = self.game.all_sprites, self.game.blocks
+        self.groups = self.game.all_sprites, self.game.all_sprites_not_player, self.game.blocks
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x * TILE_SIZE
@@ -169,7 +229,7 @@ class Ground(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = GROUND_LAYER
-        self.groups = self.game.all_sprites
+        self.groups = self.game.all_sprites, self.game.all_sprites_not_player
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x * TILE_SIZE

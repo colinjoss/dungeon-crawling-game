@@ -18,13 +18,14 @@ class Game:
         self.font = pygame.font.Font = ('freesansbold.ttf', 32)
         self.running = True
 
-        self.bg = pygame.image.load('img/ocean1.png')
+        self.bg = pygame.image.load('img/ocean.png')
 
-        self.character_sheet = SpriteSheet('img/player_sheet.png')
+        self.character_sheet = SpriteSheet('img/player_sheet1.png')
         self.terrain_sheet = SpriteSheet('img/terrain_sheet.png')
 
         self.playing = True
         self.all_sprites = pygame.sprite.LayeredUpdates()
+        self.all_sprites_not_player = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
@@ -42,7 +43,6 @@ class Game:
 
     def events(self):
         for event in pygame.event.get():
-
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
