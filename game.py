@@ -33,13 +33,25 @@ class Game:
         self.create_tilemap()
 
     def create_tilemap(self):
+        center = [10, 7]
+        player = None
         for y, row in enumerate(tilemap):
             for x, col in enumerate(row):
-                Ground(self, x, y)
-                if col == 'B':
-                    Block(self, x, y)
                 if col == 'P':
-                    Player(self, x, y)
+                    player = [x, y]
+
+        if player != center:
+            center[0], center[1] = center[0] - player[0], center[1] - player[1]
+        else:
+            center[0], center[1] = 0, 0
+
+        for y, row in enumerate(tilemap):
+            for x, col in enumerate(row):
+                Ground(self, x + center[0], y + center[1])
+                if col == 'B':
+                    Block(self, x + center[0], y + center[1])
+                if col == 'P':
+                    Player(self, x + center[0], y + center[1])
 
     def events(self):
         for event in pygame.event.get():
