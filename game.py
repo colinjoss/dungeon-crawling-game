@@ -18,6 +18,11 @@ class Game:
         self.font = pygame.font.Font = ('freesansbold.ttf', 32)
         self.running = True
 
+        self.bg = pygame.image.load('img/ocean1.png')
+
+        self.character_sheet = SpriteSheet('img/player_sheet.png')
+        self.terrain_sheet = SpriteSheet('img/terrain_sheet.png')
+
         self.playing = True
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
@@ -29,6 +34,7 @@ class Game:
     def create_tilemap(self):
         for y, row in enumerate(tilemap):
             for x, col in enumerate(row):
+                Ground(self, x, y)
                 if col == 'B':
                     Block(self, x, y)
                 if col == 'P':
@@ -45,7 +51,7 @@ class Game:
         self.all_sprites.update()
 
     def draw(self):
-        self.screen.fill(BLACK)
+        self.screen.blit(self.bg, (0, 0))
         self.all_sprites.draw(self.screen)
         self.clock.tick(FPS)
         pygame.display.update()
