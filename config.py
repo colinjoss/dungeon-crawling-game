@@ -23,19 +23,57 @@ BLUE = (0, 0, 255)
 NASTY_GREEN = (181, 230, 29)
 
 tilemap = [
-    'BBBBBBBBBBBBBBBBBBBBBBBBBB',
-    'B........................B',
-    'B........................B',
-    'B.....BBB.........P......B',
-    'B.....BBB................B',
-    'B........................B',
-    'B........................B',
-    'B........................B',
-    'B........................B',
-    'B........................B',
-    'B..........BBBB..........B',
-    'B..........BBBB..........B',
-    'B........................B',
-    'B........................B',
-    'BBBBBBBBBBBBBBBBBBBBBBBBBB'
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB................P.......BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBB........................BBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
 ]
+
+
+def generate_random_map(rows, columns, pr, pc):
+    rows = rows + 24
+    columns = columns + 24
+    pr = pr + 12
+    pc = pc + 12
+
+    if not 12 <= pr < rows - 12 or not 12 <= pc < columns - 12:
+        return False
+
+    map = []
+    for r in range(0, rows):
+
+        if r < 12 or r > rows - 13:
+            map.append('B' * columns)
+        else:
+            map.append('BBBBBBBBBBBB' + ('.' * (columns - 24)) + 'BBBBBBBBBBBB')
+
+    map[pr] = map[pr][:pc] + 'P' + map[pr][pc + 1:]
+
+    return map
+
+
+# map = generate_random_map(5, 5, 4, 4)
+# for row in map:
+#     print(row)
