@@ -8,6 +8,7 @@ import sys
 from PIL import Image
 import random
 from generate_bg import work
+import level_generation as level
 
 
 class Game:
@@ -22,48 +23,61 @@ class Game:
 
         self.character_sheet = SpriteSheet('img/player_sheet1.png')
         self.terrain_sheet = SpriteSheet('img/terrain_sheet.png')
+        self.door_sheet = SpriteSheet('img/door_sheet.png')
 
         self.playing = True
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.all_sprites_not_player = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
+        self.doors = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
 
-        self.create_tilemap()
+        self.door = False
 
-    def create_tilemap(self):
-        width, height = random.randint(30, 51), random.randint(30, 51)
-        pr, pc = random.randint(0, height), random.randint(0, width)
+        self.start()
 
-        # pr, pc = 20, 20
+    def start(self):
+        self.create_level()
 
-        map = generate_random_map(height, width, pr, pc)
+    def create_level(self):
+        maps = {1: []}
 
-        for row in map:
-            print(row)
-        print('player:', pr, pc)
+        width, height = random.randint(10, 21), random.randint(10, 21)
+        pr, pc = (height) // 2, (width) // 2
+        map = level.generate_random_map(height, width, (pr, pc))
+        maps[1].append(map)
+        maps[1].append([pr, pc])
 
-        # if player != center:
-        #     center[0], center[1] = center[0] - player[0], center[1] - player[1]
-        # else:
-        #     center[0], center[1] = 0, 0
-        # print(center)
-        # [-2, -5]
+        self.generate_room(maps[1][0], maps[1][1][0], maps[1][1][1])
 
-        for y, row in enumerate(map):
+    def create_level_doors(self, maps):
+        pass
+
+    def change_spawn_position(self, room, old_pr, old_pc, new_pr, new_pc):
+        pass
+
+    def generate_room(self, room, pr, pc):
+        for y, row in enumerate(room):
             for x, col in enumerate(row):
-                Ground(self, x - 12 - pc + 10, y - 12 - pr + 7)
                 if col == 'B':
                     Block(self, x - 12 - pc + 10, y - 12 - pr + 7)
-                if col == 'P':
+                elif col == 'P':
                     Player(self, x - 12 - pc + 10, y - 12 - pr + 7)
+                elif isinstance(col, int):
+                    Door(self, x - 12 - pc + 10, y - 12 - pr + 7)
+                else:
+                    Ground(self, x - 12 - pc + 10, y - 12 - pr + 7)
 
-    def events(self):
+    def button_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
+
+    def step_events(self):
+        if self.door:
+            self.door = False
 
     def update(self):
         self.all_sprites.update()
@@ -75,9 +89,12 @@ class Game:
         pygame.display.update()
 
     def main(self):
+        pygame.mixer.music.load(OVERWORLD_MUSIC)
+        pygame.mixer.music.play(-1)
         while self.playing:
-            self.events()
+            self.button_events()
             self.update()
+            self.step_events()
             self.draw()
 
     def game_over(self):
@@ -102,10 +119,7 @@ class Game:
 #     # BAG_MENU_FONT = pygame.font.Font('freesansbold.ttf', 24)
 #     CENTER_SCREEN = (320, 240)
 #
-#     # MENU_MUSIC = 'sound/menu.mp3'
-#     # OVERWORLD_MUSIC = 'sound/overworld.mp3'
-#     # MENU_MOVE_SOUND = pygame.mixer.Sound('sound/menu_move_sound.wav')
-#     # MENU_SELECT_SOUND = pygame.mixer.Sound('sound/menu_select_sound.wav')
+
 #
 #     MAP_THEMES = ['jungle', 'ocean']
 #

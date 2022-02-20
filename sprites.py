@@ -74,7 +74,7 @@ class Player(pygame.sprite.Sprite):
 
             self.move_direction()       # Gets keyboard input; sets x/y change  and facing direction
 
-            if self.collides('x') or self.collides('y'):    # Tests move - if collides with block, do not update
+            if self.collide_block('x') or self.collide_block('y'):    # Tests move - if collides, do not update
                 self.x_change = 0
                 self.y_change = 0
                 return
@@ -83,6 +83,9 @@ class Player(pygame.sprite.Sprite):
 
         self.x_change = 0
         self.y_change = 0
+
+        if self.collide_door():
+            self.game.door = True
 
     def move_direction(self):
         keys = pygame.key.get_pressed()
@@ -99,7 +102,7 @@ class Player(pygame.sprite.Sprite):
             self.y_change -= PLAYER_SPEED
             self.facing = UP
 
-    def collides(self, direction):
+    def collide_block(self, direction):
         if direction == 'x':
             self.rect.x += self.x_change
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
@@ -111,6 +114,10 @@ class Player(pygame.sprite.Sprite):
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
             self.rect.y -= self.y_change
             return True if hits else False
+
+    def collide_door(self):
+        hits = pygame.sprite.spritecollide(self, self.game.doors, False)
+        return True if hits else False
 
     def animate_movement(self):
         start = 0
@@ -229,7 +236,7 @@ class Ground(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = GROUND_LAYER
-        self.groups = self.game.all_sprites, self.game.all_sprites_not_player
+        self.groups = self.game.all_sprites,
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x * TILE_SIZE
@@ -238,6 +245,26 @@ class Ground(pygame.sprite.Sprite):
         self.height = TILE_SIZE
 
         self.image = self.game.terrain_sheet.get_sprite(0, 0, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+
+class Door(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprites, self.game.doors
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.door_sheet.get_sprite(0, 0, self.width, self.height)
         self.image.set_colorkey(NASTY_GREEN)
 
         self.rect = self.image.get_rect()
