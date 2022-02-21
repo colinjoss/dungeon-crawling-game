@@ -33,41 +33,39 @@ class Game:
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
 
+        self.player = None
+        self.room = None
+        self.maps = {}
+
         self.door = False
 
         self.start()
 
     def start(self):
-        self.create_level()
+        self.create_level(True)
 
-    def create_level(self):
-        maps = {1: []}
-
+    def create_level(self, start=False):
         width, height = random.randint(10, 21), random.randint(10, 21)
-        pr, pc = (height) // 2, (width) // 2
-        map = level.generate_random_map(height, width, (pr, pc))
-        maps[1].append(map)
-        maps[1].append([pr, pc])
+        level.generate_random_map(self, height, width, start, 0)
+        self.generate_room(self.maps[self.room][0], (self.maps[self.room][1][0], self.maps[self.room][1][1]))
 
-        self.generate_room(maps[1][0], maps[1][1][0], maps[1][1][1])
+    def generate_room(self, room, player):
+        for y, row in enumerate(room):
+            for x, col in enumerate(row):
+                if col == 'B':
+                    Block(self, x - player[1] + 10, y - player[0] + 7)
+                elif col == 'P':
+                    self.player = Player(self, x - player[1] + 10, y - player[0] + 7, player[1], player[0])
+                elif isinstance(col, int):
+                    Door(self, x - player[1] + 10, y - player[0] + 7)
+                else:
+                    Ground(self, x - player[1] + 10, y - player[0] + 7)
 
     def create_level_doors(self, maps):
         pass
 
     def change_spawn_position(self, room, old_pr, old_pc, new_pr, new_pc):
         pass
-
-    def generate_room(self, room, pr, pc):
-        for y, row in enumerate(room):
-            for x, col in enumerate(row):
-                if col == 'B':
-                    Block(self, x - 12 - pc + 10, y - 12 - pr + 7)
-                elif col == 'P':
-                    Player(self, x - 12 - pc + 10, y - 12 - pr + 7)
-                elif isinstance(col, int):
-                    Door(self, x - 12 - pc + 10, y - 12 - pr + 7)
-                else:
-                    Ground(self, x - 12 - pc + 10, y - 12 - pr + 7)
 
     def button_events(self):
         for event in pygame.event.get():
@@ -76,8 +74,12 @@ class Game:
                 self.running = False
 
     def step_events(self):
-        if self.door:
-            self.door = False
+        pass
+
+
+    def kill_map(self):
+        for sprite in self.all_sprites:
+            sprite.kill()
 
     def update(self):
         self.all_sprites.update()
