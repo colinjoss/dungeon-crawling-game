@@ -222,8 +222,8 @@ class Player(pygame.sprite.Sprite):
 
     def check_ground(self):
         items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
-        if self.game.current.data[self.rel_y//32][self.rel_x//32] in items:
-            self.game.current.data[self.rel_y//32][self.rel_x//32] = '.'
+        if self.game.loc.data[self.rel_y//32][self.rel_x//32] in items:
+            self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
 
 
 class Block(pygame.sprite.Sprite):
@@ -295,13 +295,18 @@ class Door(pygame.sprite.Sprite):
         if hits:
             self.game.kill_map()
             self.game.screen.fill(BLACK)
-            node = self.game.current.bridges[self.number].room
+            node = self.game.loc.bridges[self.number].room
 
             if node.num not in self.game.visited:
+                self.game.depth += 1
                 node = level.generate_next_maps(node)
                 self.game.visited.append(node.num)
+            elif node.num in self.game.visited and self.game.loc.num < node.num:
+                self.game.depth += 1
+            else:
+                self.game.depth -= 1
 
-            player = self.game.current.bridges[self.number].spawn
+            player = self.game.loc.bridges[self.number].spawn
             self.game.load_room(node, player)
 
 

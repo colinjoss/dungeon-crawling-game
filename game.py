@@ -34,19 +34,27 @@ class Game:
         self.attacks = pygame.sprite.LayeredUpdates()
 
         self.player = None
-        self.current = None
+        self.loc = None
         self.visited = [0]
+        self.depth = 0
 
         self.start()
 
     def start(self):
         tree = level.start_tree()
         tree.head, player = level.generate_starting_maps()
-        self.current = tree.head
-        self.load_room(self.current, player)
+        self.loc = tree.head
+        self.load_room(self.loc, player)
 
     def load_room(self, room, player):
-        room.data[player[0]+1][player[1]] = 'P'
+
+        print(self.depth)
+
+        if room.data[player[0]+1][player[1]] == 'B':
+            room.data[player[0]-1][player[1]] = 'P'
+        else:
+            room.data[player[0] + 1][player[1]] = 'P'
+
 
         for y, row in enumerate(room.data):
             for x, col in enumerate(row):
@@ -75,7 +83,7 @@ class Game:
 
         room.data[player[0]+1][player[1]] = '.'
 
-        self.current = room
+        self.loc = room
 
         # Shift room over by players location (puts player in corner)
         for sprite in self.all_sprites:
