@@ -167,9 +167,7 @@ def create_door(door_nums, door_coords, rows, columns, matrix):
         if abs(d_coord[0] - door_coords[i][0]) < 3 or abs(d_coord[1] - door_coords[i][1]) < 3:
             d_coord = get_random_coordinates(rows, columns)
             continue
-        if d_coord[0] > rows - 14 or d_coord[1] > columns - 14:
-            d_coord = get_random_coordinates(rows, columns)
-            continue
+        print(matrix[d_coord[0]+1][d_coord[1]], matrix[d_coord[0]][d_coord[1]+1])
 
         i += 1
 

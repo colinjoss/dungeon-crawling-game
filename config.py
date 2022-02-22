@@ -28,5 +28,7 @@ NASTY_GREEN = (181, 230, 29)
 
 MENU_MUSIC = 'sound/menu.mp3'
 OVERWORLD_MUSIC = 'sound/overworld.mp3'
-MENU_MOVE_SOUND = pygame.mixer.Sound('sound/menu_move_sound.wav')
-MENU_SELECT_SOUND = pygame.mixer.Sound('sound/menu_select_sound.wav')
+CHANGE_OPTION = pygame.mixer.Sound('sound/change_option.wav')
+SELECT = pygame.mixer.Sound('sound/select.wav')
+WALL = pygame.mixer.Sound('sound/wall.wav')
+EAT = pygame.mixer.Sound('sound/bite.wav')

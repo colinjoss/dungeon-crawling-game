@@ -35,6 +35,7 @@ class Player(pygame.sprite.Sprite):
         self.y_change = 0
 
         self.movement_delay = 0
+        self.sound_delay = 0
 
         self.facing = 'down'
         self.animation_loop = 0
@@ -44,6 +45,9 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+        self.rel_x = self.x
+        self.rel_y = self.y
 
         self.down_animations = [
             self.game.character_sheet.get_sprite(0, 0, self.width, self.height),
@@ -73,14 +77,25 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         if self.movement_delay < pygame.time.get_ticks():
 
+            self.movement_delay = pygame.time.get_ticks() + 80
+
             self.move_direction()       # Gets keyboard input; sets x/y change  and facing direction
 
             if self.collide_block('x') or self.collide_block('y'):    # Tests move - if collides, do not update
+
+                if self.sound_delay < pygame.time.get_ticks():
+                    self.sound_delay = pygame.time.get_ticks() + 320
+                    pygame.mixer.Sound.play(WALL)
+
                 self.x_change = 0
                 self.y_change = 0
                 return
 
+            self.rel_x += self.x_change
+            self.rel_y += self.y_change
+
             self.animate_movement()
+            self.check_ground()
 
         self.x_change = 0
         self.y_change = 0
@@ -205,6 +220,11 @@ class Player(pygame.sprite.Sprite):
 
                 self.y_change = 0
 
+    def check_ground(self):
+        items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
+        if self.game.current.data[self.rel_y//32][self.rel_x//32] in items:
+            self.game.current.data[self.rel_y//32][self.rel_x//32] = '.'
+
 
 class Block(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
@@ -290,6 +310,15 @@ class Item(pygame.sprite.Sprite):
         self.game = game
         self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
+
+    def update(self):
+        self.use_item()
+
+    def use_item(self):
+        hits = pygame.sprite.collide_rect(self.game.player, self)
+        if hits:
+            pygame.mixer.Sound.play(EAT)
+            self.kill()
 
 
 class Cherry(Item):
