@@ -5,7 +5,6 @@ import pygame
 from config import *
 from sprites import *
 import sys
-from PIL import Image
 import random
 from generate_bg import work
 import level_generation as level
@@ -34,35 +33,58 @@ class Game:
         self.attacks = pygame.sprite.LayeredUpdates()
 
         self.player = None
-        self.room = None
-        self.maps = {}
-
-        self.door = False
+        self.current = None
+        self.visited = [0]
 
         self.start()
 
     def start(self):
-        self.create_level(True)
+        tree = level.start_tree()
+        tree.head, player = level.generate_starting_maps()
+        self.current = tree.head
+        self.load_room(self.current, player)
 
-    def create_level(self, start=False):
-        width, height = random.randint(10, 21), random.randint(10, 21)
-        level.generate_random_map(self, height, width, start, 0)
-        self.generate_room(self.maps[self.room][0], (self.maps[self.room][1][0], self.maps[self.room][1][1]))
+    # def start(self):
+    #     width, height = random.randint(10, 21), random.randint(10, 21)
+    #     player = level.generate_starting_map(self, height, width)
+    #     self.generate_room(self.maps[self.room], player)
+    #
+    # def create_level(self, to_room, from_room):
+    #     width, height = random.randint(10, 21), random.randint(10, 21)
+    #     player = level.generate_random_map(self, height, width, to_room, from_room)
+    #     self.generate_room(self.maps[self.room], player)
+    #
+    # def recreate_level(self, to_room, from_room):
+    #     self.generate_room(self.maps[to_room], ())
+    #     self.room = to_room
 
-    def generate_room(self, room, player):
-        for y, row in enumerate(room):
+    def load_room(self, room, player):
+        room.data[player[0]+1][player[1]] = 'P'
+
+        for y, row in enumerate(room.data):
             for x, col in enumerate(row):
                 if col == 'B':
-                    Block(self, x - player[1] + 10, y - player[0] + 7)
+                    Block(self, x, y)
                 elif col == 'P':
-                    self.player = Player(self, x - player[1] + 10, y - player[0] + 7, player[1], player[0])
+                    self.player = Player(self, x, y)
                 elif isinstance(col, int):
-                    Door(self, x - player[1] + 10, y - player[0] + 7)
+                    Door(self, x, y, col)
                 else:
-                    Ground(self, x - player[1] + 10, y - player[0] + 7)
+                    Ground(self, x, y)
 
-    def create_level_doors(self, maps):
-        pass
+        room.data[player[0]+1][player[1]] = '.'
+
+        self.current = room
+
+        # Shift room over by players location (puts player in corner)
+        for sprite in self.all_sprites:
+            sprite.rect.x -= player[1] * TILE_SIZE
+            sprite.rect.y -= player[0] * TILE_SIZE
+
+        # Shift room so player is in middle
+        for sprite in self.all_sprites:
+            sprite.rect.x += 10 * TILE_SIZE
+            sprite.rect.y += 7 * TILE_SIZE
 
     def change_spawn_position(self, room, old_pr, old_pc, new_pr, new_pc):
         pass
@@ -75,7 +97,6 @@ class Game:
 
     def step_events(self):
         pass
-
 
     def kill_map(self):
         for sprite in self.all_sprites:

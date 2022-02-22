@@ -1,5 +1,6 @@
 import pygame
 from config import *
+import level_generation as level
 import math
 import random
 import time
@@ -17,7 +18,7 @@ class SpriteSheet:
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, ax, ay):
+    def __init__(self, game, x, y):
 
         self.game = game
         self._layer = PLAYER_LAYER
@@ -32,9 +33,6 @@ class Player(pygame.sprite.Sprite):
 
         self.x_change = 0
         self.y_change = 0
-
-        self.actual_x = ax
-        self.actual_y = ay
 
         self.movement_delay = 0
 
@@ -128,7 +126,6 @@ class Player(pygame.sprite.Sprite):
                 self.image = self.game.character_sheet.get_sprite(0, 0, self.width, self.height)
                 self.animation_loop = 0
             else:
-                self.actual_y += 1
                 while start != end:
                     self.rect.y += 4
 
@@ -150,7 +147,6 @@ class Player(pygame.sprite.Sprite):
                 self.image = self.game.character_sheet.get_sprite(32, 0, self.width, self.height)
                 self.animation_loop = 0
             else:
-                self.actual_y -= 1
                 while start != end:
                     self.rect.y -= 4
 
@@ -172,7 +168,6 @@ class Player(pygame.sprite.Sprite):
                 self.image = self.game.character_sheet.get_sprite(64, 0, self.width, self.height)
                 self.animation_loop = 0
             else:
-                self.actual_x -= 1
                 while start != end:
                     self.rect.x -= 4
 
@@ -194,7 +189,6 @@ class Player(pygame.sprite.Sprite):
                 self.image = self.game.character_sheet.get_sprite(96, 0, self.width, self.height)
                 self.animation_loop = 0
             else:
-                self.actual_x += 1
                 while start != end:
                     self.rect.x += 4
 
@@ -253,11 +247,13 @@ class Ground(pygame.sprite.Sprite):
 
 
 class Door(pygame.sprite.Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, n):
         self.game = game
         self._layer = GROUND_LAYER
-        self.groups = self.game.all_sprites, self.game.doors
+        self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.number = n
 
         self.x = x * TILE_SIZE
         self.y = y * TILE_SIZE
@@ -275,10 +271,17 @@ class Door(pygame.sprite.Sprite):
         self.use_door()
 
     def use_door(self):
-        hits = pygame.sprite.spritecollide(self.game.player, self.game.doors, False)
+        hits = pygame.sprite.collide_rect(self.game.player, self)
         if hits:
-            self.kill()
-            # door_on = self.maps[self.room][0][self.player.actual_y][self.player.actual_x]  # Which door player is on
+
             self.game.kill_map()
             self.game.screen.fill(BLACK)
-            self.game.create_level(False)
+            node = self.game.current.bridges[self.number].room
+
+            if node.num not in self.game.visited:
+                node = level.generate_next_maps(node)
+                self.game.visited.append(node.num)
+            print(self.game.visited)
+
+            player = self.game.current.bridges[self.number].spawn
+            self.game.load_room(node, player)
