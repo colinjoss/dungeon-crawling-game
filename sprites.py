@@ -227,7 +227,7 @@ class Block(pygame.sprite.Sprite):
 
 
 class Ground(pygame.sprite.Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, type):
         self.game = game
         self._layer = GROUND_LAYER
         self.groups = self.game.all_sprites
@@ -238,7 +238,7 @@ class Ground(pygame.sprite.Sprite):
         self.width = TILE_SIZE
         self.height = TILE_SIZE
 
-        self.image = self.game.terrain_sheet.get_sprite(0, 0, self.width, self.height)
+        self.image = self.game.terrain_sheet.get_sprite(type * TILE_SIZE, 0, self.width, self.height)
         self.image.set_colorkey(NASTY_GREEN)
 
         self.rect = self.image.get_rect()
@@ -273,7 +273,6 @@ class Door(pygame.sprite.Sprite):
     def use_door(self):
         hits = pygame.sprite.collide_rect(self.game.player, self)
         if hits:
-
             self.game.kill_map()
             self.game.screen.fill(BLACK)
             node = self.game.current.bridges[self.number].room
@@ -281,7 +280,127 @@ class Door(pygame.sprite.Sprite):
             if node.num not in self.game.visited:
                 node = level.generate_next_maps(node)
                 self.game.visited.append(node.num)
-            print(self.game.visited)
 
             player = self.game.current.bridges[self.number].spawn
             self.game.load_room(node, player)
+
+
+class Item(pygame.sprite.Sprite):
+    def __init__(self, game):
+        self.game = game
+        self.groups = self.game.all_sprites
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+
+class Cherry(Item):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.items_sheet.get_sprite(0, 0, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+
+class Banana(Item):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.items_sheet.get_sprite(32, 0, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+
+class Melon(Item):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.items_sheet.get_sprite(64, 0, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+
+class Grape(Item):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.items_sheet.get_sprite(96, 0, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+
+class Orange(Item):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.items_sheet.get_sprite(128, 0, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+
+class Apple(Item):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.items_sheet.get_sprite(160, 0, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y

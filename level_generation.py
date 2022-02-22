@@ -1,4 +1,5 @@
 import random as rd
+import math
 
 
 class MapTree:
@@ -30,20 +31,6 @@ door_count = sequence()
 room_count = sequence()
 
 
-# def test():
-#     tree = start_tree()
-#     tree.head, player = generate_starting_maps()
-#
-#     node = generate_next_maps(tree.head.bridges[0].room)
-#     print('sdfsdf')
-
-    # for key in node.bridges[2].next.bridges:
-    #     if isinstance(node.bridges[2].next.bridges[key], BridgeNode):
-    #         print(key, node.bridges[2].next.bridges[key].next.room)
-    #     else:
-    #         print(key, node.bridges[2].next.bridges[key])
-
-
 def start_tree():
     return MapTree()
 
@@ -55,6 +42,9 @@ def generate_starting_maps():
 
     matrix0 = generate_room(rows0, columns0)        # Generate matrix for first and second rooms
     matrix1 = generate_room(rows1, columns1)
+
+    randomize_items(matrix0, rows0, columns0)
+    randomize_items(matrix1, rows1, columns1)
 
     door_nums_0, door_coords_0 = [], []             # Place connecting door in first room
     create_door(door_nums_0, door_coords_0, rows0, columns0, matrix0)
@@ -88,6 +78,8 @@ def generate_next_maps(room):
         rows, columns = get_random_dimensions()     # Get random dimensions
         matrix = generate_room(rows, columns)       # Create matrix
 
+        randomize_items(matrix, rows, columns)      # Place items
+
         door_nums, door_coords = [], []
         create_door(door_nums, door_coords, rows, columns, matrix)  # Place door connecting in new room
 
@@ -117,8 +109,43 @@ def generate_room(rows, columns):
         if r < 12 or r > rows - 13:
             matrix.append(['B'] * columns)
         else:
-            matrix.append((['B'] * 12) + (['.'] * (columns - 24)) + (['B'] * 12))
+            # floor = (['.'] * (columns - 24))
+            floor = randomize_floor(columns - 24)
+            matrix.append((['B'] * 12) + floor + (['B'] * 12))
+
     return matrix
+
+
+def randomize_floor(length):
+    ground = ['.', '..']
+    result = []
+    for i in range(0, length):
+        result.append(ground[math.floor(2 * rd.random())])
+    return result
+
+
+def randomize_items(matrix, rows, columns):
+    res = rd.random()
+    n = 0
+    if res > 0.99:      # Ten items
+        n = 5
+    elif res > 0.90:    # Five items
+        n = 3
+    elif res > 0.70:    # Three items
+        n = 2
+    elif res > 0.50:    # One item
+        n = 1
+    place_items(matrix, rows, columns, n)
+
+
+def place_items(matrix, rows, columns, n):
+    items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
+    for i in range(0, n):
+        r = math.floor(rd.random() * (rows - 24))
+        c = math.floor(rd.random() * (columns - 24))
+        if matrix[r+12][c+12] == '.' or matrix[r+12][c+12] == '..':
+            matrix[r+12][c+12] = items[math.floor(rd.random() * 6)]
+
 
 
 def get_random_dimensions():

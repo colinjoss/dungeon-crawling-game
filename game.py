@@ -23,6 +23,7 @@ class Game:
         self.character_sheet = SpriteSheet('img/player_sheet1.png')
         self.terrain_sheet = SpriteSheet('img/terrain_sheet.png')
         self.door_sheet = SpriteSheet('img/door_sheet.png')
+        self.items_sheet = SpriteSheet('img/items_sheet.png')
 
         self.playing = True
         self.all_sprites = pygame.sprite.LayeredUpdates()
@@ -44,20 +45,6 @@ class Game:
         self.current = tree.head
         self.load_room(self.current, player)
 
-    # def start(self):
-    #     width, height = random.randint(10, 21), random.randint(10, 21)
-    #     player = level.generate_starting_map(self, height, width)
-    #     self.generate_room(self.maps[self.room], player)
-    #
-    # def create_level(self, to_room, from_room):
-    #     width, height = random.randint(10, 21), random.randint(10, 21)
-    #     player = level.generate_random_map(self, height, width, to_room, from_room)
-    #     self.generate_room(self.maps[self.room], player)
-    #
-    # def recreate_level(self, to_room, from_room):
-    #     self.generate_room(self.maps[to_room], ())
-    #     self.room = to_room
-
     def load_room(self, room, player):
         room.data[player[0]+1][player[1]] = 'P'
 
@@ -67,10 +54,24 @@ class Game:
                     Block(self, x, y)
                 elif col == 'P':
                     self.player = Player(self, x, y)
+                elif col == 'Ch':
+                    Cherry(self, x, y)
+                elif col == 'Ba':
+                    Banana(self, x, y)
+                elif col == 'Me':
+                    Melon(self, x, y)
+                elif col == 'Gr':
+                    Grape(self, x, y)
+                elif col == 'Or':
+                    Orange(self, x, y)
+                elif col == 'Ap':
+                    Apple(self, x, y)
                 elif isinstance(col, int):
                     Door(self, x, y, col)
+                elif col == '..':
+                    Ground(self, x, y, 1)
                 else:
-                    Ground(self, x, y)
+                    Ground(self, x, y, 0)
 
         room.data[player[0]+1][player[1]] = '.'
 
@@ -85,9 +86,6 @@ class Game:
         for sprite in self.all_sprites:
             sprite.rect.x += 10 * TILE_SIZE
             sprite.rect.y += 7 * TILE_SIZE
-
-    def change_spawn_position(self, room, old_pr, old_pc, new_pr, new_pc):
-        pass
 
     def button_events(self):
         for event in pygame.event.get():
