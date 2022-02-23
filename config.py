@@ -26,10 +26,17 @@ BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 NASTY_GREEN = (181, 230, 29)
 
-MENU_MUSIC = 'sound/menu.mp3'
-OVERWORLD_MUSIC = 'sound/overworld.mp3'
-CHANGE_OPTION = pygame.mixer.Sound('sound/change_option.wav')
-SELECT = pygame.mixer.Sound('sound/select.wav')
-WALL = pygame.mixer.Sound('sound/wall.wav')
-EAT = pygame.mixer.Sound('sound/bite.wav')
-DOOR = pygame.mixer.Sound('sound/door.wav')
+BACKGROUND = ['img/bg/sunset.jpg', 'img/bg/space.jpg', 'img/bg/snow.jpg', 'img/bg/garden.jpg']
+MUSIC = ['sound/music/sunset.mp3', 'sound/music/funk.mp3', 'sound/music/wizard.mp3', 'sound/music/garden.mp3']
+
+MENU_MUSIC = 'sound/music/menu.mp3'
+
+CHANGE_OPTION = pygame.mixer.Sound('sound/effects/change_option.wav')
+SELECT = pygame.mixer.Sound('sound/effects/select.wav')
+WALL = pygame.mixer.Sound('sound/effects/wall.wav')
+EAT = pygame.mixer.Sound('sound/effects/bite.wav')
+DOOR = pygame.mixer.Sound('sound/effects/door3.wav')
+
+print(pygame.font.get_fonts())
+TITLE_FONT = pygame.font.SysFont('bauhaus93', 64)
+TITLE_MENU_FONT = pygame.font.SysFont('bauhaus93', 28)

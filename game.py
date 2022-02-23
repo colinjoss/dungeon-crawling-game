@@ -18,7 +18,8 @@ class Game:
         self.font = pygame.font.Font = ('freesansbold.ttf', 32)
         self.running = True
 
-        self.bg = pygame.image.load('img/ocean.png')
+        self.bg = None
+        self.music = None
 
         self.character_sheet = SpriteSheet('img/player_sheet1.png')
         self.terrain_sheet = SpriteSheet('img/terrain_sheet.png')
@@ -37,6 +38,8 @@ class Game:
         self.loc = None
         self.visited = [0]
         self.depth = 0
+        self.level = 0
+        self.worlds = [0, 5, 10, 15, 20]
 
         self.start()
 
@@ -73,8 +76,8 @@ class Game:
                     Apple(self, x, y)
                 elif isinstance(col, int):
                     Door(self, x, y, col)
-                elif col == '..':
-                    Ground(self, x, y, 1)
+                # elif col == '..':
+                #     Ground(self, x, y, 1)
                 else:
                     Ground(self, x, y, 0)
 
@@ -109,14 +112,21 @@ class Game:
         self.all_sprites.update()
 
     def draw(self):
+        if self.depth == 20:
+            pygame.quit()
+
+        if self.depth == self.worlds[self.level]:
+            self.bg = pygame.image.load(BACKGROUND[self.level])
+            pygame.mixer.music.load(MUSIC[self.level])
+            pygame.mixer.music.play(-1)
+            self.level += 1
+
         self.screen.blit(self.bg, (0, 0))
         self.all_sprites.draw(self.screen)
         self.clock.tick(FPS)
         pygame.display.update()
 
     def main(self):
-        pygame.mixer.music.load(OVERWORLD_MUSIC)
-        pygame.mixer.music.play(-1)
         while self.playing:
             self.button_events()
             self.update()
@@ -127,6 +137,63 @@ class Game:
         pass
 
     def title_screen(self):
+        pygame.mixer.music.load('sound/music/menu.mp3')
+        pygame.mixer.music.play(-1)
+
+        start_color = 'red'
+        quit_color = 'white'
+
+        menu = True
+        while menu:
+
+            title = TITLE_FONT.render('D U N G E O N', True, 'blue')
+            title_rect = title.get_rect()
+            title_rect.center = (336, 150)
+
+            start_text = TITLE_MENU_FONT.render('START', True, start_color)
+            start_text_rect = start_text.get_rect()
+            start_text_rect.center = (336, 260)
+
+            quit_text = TITLE_MENU_FONT.render('QUIT', True, quit_color)
+            quit_text_rect = quit_text.get_rect()
+            quit_text_rect.center = (336, 300)
+
+            self.screen.fill((0, 0, 0))
+            self.screen.blit(title, title_rect)
+            self.screen.blit(start_text, start_text_rect)
+            self.screen.blit(quit_text, quit_text_rect)
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:  # Exit
+                    pygame.quit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:  # Up arrow
+                        pygame.mixer.Sound.play(CHANGE_OPTION)
+                        start_color = 'red'
+                        quit_color = 'white'
+
+                    if event.key == pygame.K_DOWN:  # Down arrow
+                        pygame.mixer.Sound.play(CHANGE_OPTION)
+                        start_color = 'white'
+                        quit_color = 'red'
+
+                    if event.key == pygame.K_z and quit_color == 'red':
+                        pygame.mixer.Sound.play(SELECT)
+                        menu = False
+                        self.running = False
+
+                    if event.key == pygame.K_z and start_color == 'red':
+                        pygame.mixer.Sound.play(SELECT)
+                        return
+
+            pygame.display.update()
+
+    def select(self, text, text_rect):
+        pass
+
+    def unselect(self, text_rect):
         pass
 
     def instructions_screen(self):
@@ -157,73 +224,73 @@ class Game:
 #     def new_dungeon(self, theme, jewel):
 #         return Map(theme, jewel)
 #
-#     def title_menu(self):
-#         pygame.mixer.music.load(self.MENU_MUSIC)
-#         pygame.mixer.music.play(-1)
-#
-#         title = self.TITLE_FONT.render('D U N G E O N', True, 'white')
-#         title_surface = title.get_rect()
-#         title_surface.center = (320, 150)
-#
-#         start_text = self.TITLE_MENU_FONT.render('start', True, 'red')
-#         start_text_surface = start_text.get_rect()
-#         start_text_surface.center = (320, 260)
-#
-#         quit_text = self.TITLE_MENU_FONT.render('quit', True, 'white')
-#         quit_text_surface = quit_text.get_rect()
-#         quit_text_surface.center = (320, 300)
-#
-#         start_select = True
-#         running = True
-#         while running:
-#             self.SCREEN.fill((0, 0, 0))
-#             self.SCREEN.blit(title, title_surface)
-#             self.SCREEN.blit(start_text, start_text_surface)
-#             self.SCREEN.blit(quit_text, quit_text_surface)
-#
-#             for event in pygame.event.get():
-#
-#                 if event.type == pygame.QUIT:           # Exit
-#                     pygame.quit()
-#
-#                 if event.type == pygame.KEYDOWN:
-#                     if event.key == pygame.K_UP:        # Up arrow
-#                         pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
-#
-#                         start_text = self.TITLE_MENU_FONT.render('start', True, 'red')
-#                         start_text_surface = start_text.get_rect()
-#                         start_text_surface.center = (320, 260)
-#
-#                         quit_text = self.TITLE_MENU_FONT.render('quit', True, 'white')
-#                         quit_text_surface = quit_text.get_rect()
-#                         quit_text_surface.center = (320, 300)
-#
-#                         start_select = True
-#
-#                     if event.key == pygame.K_DOWN:      # Down arrow
-#                         pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
-#
-#                         start_text = self.TITLE_MENU_FONT.render('start', True, 'white')
-#                         start_text_surface = start_text.get_rect()
-#                         start_text_surface.center = (320, 260)
-#
-#                         quit_text = self.TITLE_MENU_FONT.render('quit', True, 'red')
-#                         quit_text_surface = quit_text.get_rect()
-#                         quit_text_surface.center = (320, 300)
-#
-#                         start_select = False
-#
-#                     if event.key == pygame.K_z and start_select is True:
-#                         pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
-#                         running = False
-#
-#                     if event.key == pygame.K_z and start_select is False:
-#                         pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
-#                         pygame.quit()
-#
-#                 pygame.display.update()
-#
-#         self.instructions()
+    # def title_menu(self):
+    #     pygame.mixer.music.load(self.MENU_MUSIC)
+    #     pygame.mixer.music.play(-1)
+    #
+    #     title = self.TITLE_FONT.render('D U N G E O N', True, 'white')
+    #     title_surface = title.get_rect()
+    #     title_surface.center = (320, 150)
+    #
+    #     start_text = self.TITLE_MENU_FONT.render('start', True, 'red')
+    #     start_text_surface = start_text.get_rect()
+    #     start_text_surface.center = (320, 260)
+    #
+    #     quit_text = self.TITLE_MENU_FONT.render('quit', True, 'white')
+    #     quit_text_surface = quit_text.get_rect()
+    #     quit_text_surface.center = (320, 300)
+    #
+    #     start_select = True
+    #     running = True
+    #     while running:
+    #         self.SCREEN.fill((0, 0, 0))
+    #         self.SCREEN.blit(title, title_surface)
+    #         self.SCREEN.blit(start_text, start_text_surface)
+    #         self.SCREEN.blit(quit_text, quit_text_surface)
+    #
+    #         for event in pygame.event.get():
+    #
+    #             if event.type == pygame.QUIT:           # Exit
+    #                 pygame.quit()
+    #
+    #             if event.type == pygame.KEYDOWN:
+    #                 if event.key == pygame.K_UP:        # Up arrow
+    #                     pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+    #
+    #                     start_text = self.TITLE_MENU_FONT.render('start', True, 'red')
+    #                     start_text_surface = start_text.get_rect()
+    #                     start_text_surface.center = (320, 260)
+    #
+    #                     quit_text = self.TITLE_MENU_FONT.render('quit', True, 'white')
+    #                     quit_text_surface = quit_text.get_rect()
+    #                     quit_text_surface.center = (320, 300)
+    #
+    #                     start_select = True
+    #
+    #                 if event.key == pygame.K_DOWN:      # Down arrow
+    #                     pygame.mixer.Sound.play(self.MENU_MOVE_SOUND)
+    #
+    #                     start_text = self.TITLE_MENU_FONT.render('start', True, 'white')
+    #                     start_text_surface = start_text.get_rect()
+    #                     start_text_surface.center = (320, 260)
+    #
+    #                     quit_text = self.TITLE_MENU_FONT.render('quit', True, 'red')
+    #                     quit_text_surface = quit_text.get_rect()
+    #                     quit_text_surface.center = (320, 300)
+    #
+    #                     start_select = False
+    #
+    #                 if event.key == pygame.K_z and start_select is True:
+    #                     pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
+    #                     running = False
+    #
+    #                 if event.key == pygame.K_z and start_select is False:
+    #                     pygame.mixer.Sound.play(self.MENU_SELECT_SOUND)
+    #                     pygame.quit()
+    #
+    #             pygame.display.update()
+    #
+    #     self.instructions()
 #
 #     def instructions(self):
 #         running = True

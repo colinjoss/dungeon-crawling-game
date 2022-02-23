@@ -95,7 +95,7 @@ class Player(pygame.sprite.Sprite):
             self.rel_y += self.y_change
 
             self.animate_movement()
-            self.check_ground()
+            self.check_feet()
 
         self.x_change = 0
         self.y_change = 0
@@ -220,7 +220,7 @@ class Player(pygame.sprite.Sprite):
 
                 self.y_change = 0
 
-    def check_ground(self):
+    def check_feet(self):
         items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
         if self.game.loc.data[self.rel_y//32][self.rel_x//32] in items:
             self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
@@ -308,6 +308,7 @@ class Door(pygame.sprite.Sprite):
 
             pygame.mixer.Sound.play(DOOR)
             player = self.game.loc.bridges[self.number].spawn
+            self.game.player.movement_delay = pygame.time.get_ticks() + 2000
             self.game.load_room(node, player)
 
 
