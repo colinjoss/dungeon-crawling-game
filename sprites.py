@@ -267,7 +267,7 @@ class Ground(pygame.sprite.Sprite):
 
 
 class Door(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, n):
+    def __init__(self, game, x, y, n, used):
         self.game = game
         self._layer = GROUND_LAYER
         self.groups = self.game.all_sprites
@@ -280,8 +280,10 @@ class Door(pygame.sprite.Sprite):
         self.width = TILE_SIZE
         self.height = TILE_SIZE
 
-        self.image = self.game.door_sheet.get_sprite(0, 0, self.width, self.height)
-        self.image.set_colorkey(NASTY_GREEN)
+        if not used:
+            self.image = self.game.door_sheet.get_sprite(0, 0, self.width, self.height)
+        else:
+            self.image = self.game.door_sheet.get_sprite(32, 0, self.width, self.height)
 
         self.rect = self.image.get_rect()
         self.rect.x = self.x
@@ -293,6 +295,9 @@ class Door(pygame.sprite.Sprite):
     def use_door(self):
         hits = pygame.sprite.collide_rect(self.game.player, self)
         if hits:
+            if self.number not in self.game.used_doors:
+                self.game.used_doors.append(self.number)
+
             self.game.kill_map()
             self.game.screen.fill(BLACK)
 

@@ -98,9 +98,10 @@ def generate_next_maps(game, room):
         bridge2 = BridgeNode(room, ret_spawn)
         new_room.bridges[door_nums[0]] = bridge2
 
-        for i in range(0, math.floor(rd.random() * 3) + 1):
-            create_door(door_nums, door_coords, corners, matrix)
-            game.paths += 1
+        if game.paths < 2:
+            for i in range(0, math.floor(rd.random() * 3) + 1):
+                create_door(door_nums, door_coords, corners, matrix)
+                game.paths += 1
 
         add_bridge_placeholders(door_nums, door_coords, new_room)    # Add bridge placeholders in second room
 

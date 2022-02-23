@@ -42,6 +42,7 @@ class Game:
         self.level = 0
         self.worlds = [0, 5, 10, 15, 20]
         self.paths = 0
+        self.used_doors = []
 
         self.start()
 
@@ -77,7 +78,10 @@ class Game:
                 elif col == 'Ap':
                     Apple(self, x, y)
                 elif isinstance(col, int):
-                    Door(self, x, y, col)
+                    if col in self.used_doors:
+                        Door(self, x, y, col, True)
+                    else:
+                        Door(self, x, y, col, False)
                 # elif col == '..':
                 #     Ground(self, x, y, 1)
                 else:
