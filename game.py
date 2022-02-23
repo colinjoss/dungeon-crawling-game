@@ -37,20 +37,22 @@ class Game:
         self.player = None
         self.loc = None
         self.visited = [0]
+        self.unvisited = 0
         self.depth = 0
         self.level = 0
         self.worlds = [0, 5, 10, 15, 20]
+        self.paths = 0
 
         self.start()
 
     def start(self):
         tree = level.start_tree()
-        tree.head, player = level.generate_starting_maps()
+        tree.head, player = level.generate_starting_maps(self)
         self.loc = tree.head
         self.load_room(self.loc, player)
 
     def load_room(self, room, player):
-
+        print(self.paths)
         if room.data[player[0]+1][player[1]] == 'B':
             room.data[player[0]-1][player[1]] = 'P'
         else:

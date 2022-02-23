@@ -35,7 +35,7 @@ def start_tree():
     return MapTree()
 
 
-def generate_starting_maps():
+def generate_starting_maps(game):
 
     rows0, columns0 = get_random_dimensions()       # Get random dimensions
     rows1, columns1 = get_random_dimensions()
@@ -47,13 +47,16 @@ def generate_starting_maps():
     randomize_items(matrix1, rows1, columns1)
 
     door_nums_0, door_coords_0 = [], []             # Place connecting door in first room
-    create_door(door_nums_0, door_coords_0, rows0, columns0, matrix0)
+    corners = get_door_coordinates(rows0, columns0)
+    create_door(door_nums_0, door_coords_0, corners, matrix0)
 
     player = create_player_spawn(rows0, columns0, matrix0)   # Place player in first room
 
     door_nums_1, door_coords_1 = [], []                      # Place 2 doors in second room
-    create_door(door_nums_1, door_coords_1, rows1, columns1, matrix1)
-    create_door(door_nums_1, door_coords_1, rows1, columns1, matrix1)
+    corners = get_door_coordinates(rows1, columns1)
+    create_door(door_nums_1, door_coords_1, corners, matrix1)
+    create_door(door_nums_1, door_coords_1, corners, matrix1)
+    game.paths += 1
 
     room0 = MapNode(next(room_count), matrix0)      # Create map node for rooms
     room1 = MapNode(next(room_count), matrix1)
@@ -69,9 +72,11 @@ def generate_starting_maps():
     return room0, player
 
 
-def generate_next_maps(room):
+def generate_next_maps(game, room):
+    game.paths -= 1
 
     for i, key in enumerate(room.bridges):
+
         if i == 0:      # Skip first because it's already done
             continue
 
@@ -81,19 +86,21 @@ def generate_next_maps(room):
         randomize_items(matrix, rows, columns)      # Place items
 
         door_nums, door_coords = [], []
-        create_door(door_nums, door_coords, rows, columns, matrix)  # Place door connecting in new room
+        corners = get_door_coordinates(rows, columns)
+        create_door(door_nums, door_coords, corners, matrix)    # Place door connecting in new room
 
-        new_room = MapNode(next(room_count), matrix)        # Create map node for new room
+        new_room = MapNode(next(room_count), matrix)    # Create map node for new room
 
-        bridge1 = BridgeNode(new_room, door_coords[0])    # Create bridge to new room
+        bridge1 = BridgeNode(new_room, door_coords[0])  # Create bridge to new room
         ret_spawn = room.bridges[key]   # Save coord in cur room
         room.bridges[key] = bridge1
 
         bridge2 = BridgeNode(room, ret_spawn)
         new_room.bridges[door_nums[0]] = bridge2
 
-        for i in range(0, math.floor(rd.random() * 2) + 1):
-            create_door(door_nums, door_coords, rows, columns, matrix)
+        for i in range(0, math.floor(rd.random() * 3) + 1):
+            create_door(door_nums, door_coords, corners, matrix)
+            game.paths += 1
 
         add_bridge_placeholders(door_nums, door_coords, new_room)    # Add bridge placeholders in second room
 
@@ -153,34 +160,21 @@ def get_random_dimensions():
     return rows, columns
 
 
-def create_door(door_nums, door_coords, rows, columns, matrix):
-    d_num = next(door_count)
-    d_coord = get_random_door_coordinates(rows, columns)
+def create_door(door_nums, door_coords, corners, matrix):
+    d_num = next(door_count)                        # Increment the door count
+    door_nums.append(d_num)                         # Save door number
 
-    # Make sure coordinate is acceptable
-    i = 0
-    while i < len(door_coords):
-        if d_coord == door_coords[i]:
-            d_coord = get_random_door_coordinates(rows, columns)
-            continue
-        if abs(d_coord[0] - door_coords[i][0]) < 3 or abs(d_coord[1] - door_coords[i][1]) < 3:
-            d_coord = get_random_door_coordinates(rows, columns)
-            continue
+    index = math.floor(rd.random() * len(corners))  # Randomly get index
+    d_coord = corners[index]                        # Get corner coord
+    door_coords.append(d_coord)                     # Save coordinate
+    del corners[index]                              # Delete coordinate from corners
 
-        i += 1
-
-    door_nums.append(d_num)
-    door_coords.append(d_coord)
-
-    matrix[d_coord[0]][d_coord[1]] = d_num
+    matrix[d_coord[0]][d_coord[1]] = d_num          # Assign door to map
 
 
-def get_random_door_coordinates(rows, columns):
+def get_door_coordinates(rows, columns):
     n, e, s, w = get_room_edge(rows, columns)
-
-    # math.floor(rd.random() * (rows - 24) + 12), math.floor(rd.random() * (columns - 24) + 12)
-
-    return rd.randint(n+1, s-1), rd.randint(w+1, e-1)
+    return [(n+1, w+1), (n+1, e-1), (s-1, e-1), (s-1, w+1)]
 
 
 def create_player_spawn(rows, columns, matrix):

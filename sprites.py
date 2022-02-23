@@ -295,15 +295,16 @@ class Door(pygame.sprite.Sprite):
         if hits:
             self.game.kill_map()
             self.game.screen.fill(BLACK)
+
             node = self.game.loc.bridges[self.number].room
 
-            if node.num not in self.game.visited:
+            if node.num not in self.game.visited:   # New depth
                 self.game.depth += 1
-                node = level.generate_next_maps(node)
+                node = level.generate_next_maps(self.game, node)
                 self.game.visited.append(node.num)
-            elif node.num in self.game.visited and self.game.loc.num < node.num:
+            elif node.num in self.game.visited and self.game.loc.num < node.num:    # Depth reachieved
                 self.game.depth += 1
-            else:
+            else:   # Backtracking
                 self.game.depth -= 1
 
             pygame.mixer.Sound.play(DOOR)
