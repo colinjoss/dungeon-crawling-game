@@ -306,6 +306,7 @@ class Door(pygame.sprite.Sprite):
             else:
                 self.game.depth -= 1
 
+            pygame.mixer.Sound.play(DOOR)
             player = self.game.loc.bridges[self.number].spawn
             self.game.load_room(node, player)
 

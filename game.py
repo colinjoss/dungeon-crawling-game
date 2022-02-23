@@ -48,13 +48,10 @@ class Game:
 
     def load_room(self, room, player):
 
-        print(self.depth)
-
         if room.data[player[0]+1][player[1]] == 'B':
             room.data[player[0]-1][player[1]] = 'P'
         else:
             room.data[player[0] + 1][player[1]] = 'P'
-
 
         for y, row in enumerate(room.data):
             for x, col in enumerate(row):
