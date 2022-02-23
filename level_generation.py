@@ -55,6 +55,7 @@ def generate_starting_maps(game):
     door_nums_1, door_coords_1 = [], []                      # Place 2 doors in second room
     corners = get_door_coordinates(rows1, columns1)
     create_door(door_nums_1, door_coords_1, corners, matrix1)
+    game.used_doors.append(door_nums_1[0])
     create_door(door_nums_1, door_coords_1, corners, matrix1)
     game.paths += 1
 
@@ -88,6 +89,7 @@ def generate_next_maps(game, room):
         door_nums, door_coords = [], []
         corners = get_door_coordinates(rows, columns)
         create_door(door_nums, door_coords, corners, matrix)    # Place door connecting in new room
+        game.used_doors.append(door_nums[0])
 
         new_room = MapNode(next(room_count), matrix)    # Create map node for new room
 
