@@ -196,7 +196,6 @@ class Enemy(pygame.sprite.Sprite):
         self.groups = self.game.all_sprites
         self.x_change = 0
         self.y_change = 0
-        self.facing = 'down'
         self.animation_loop = 0
         self.movement_delay = 0
         pygame.sprite.Sprite.__init__(self, self.groups)
@@ -228,6 +227,11 @@ class Balloon(Enemy):
         self.start = 0
         self.end = 0
         self.speed = 1
+        self.type = rd.choice(['HORIZONTAL', 'VERTICAL'])
+        if self.type == 'HORIZONTAL':
+            self.facing = DOWN
+        elif self.type == 'VERTICAL':
+            self.facing = RIGHT
 
         self.down_animations = [
             self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height),
@@ -250,23 +254,22 @@ class Balloon(Enemy):
         self.collide_player()
         if self.start == self.end:
             self.start, self.end = 0, 0
-            self.end = rd.randint(1, 5) * TILE_SIZE
-            self.move_direction()  # Gets random direction
-            if not self.collide_block('x') and not self.collide_block('y'):  # If no collision, animate movement
-                self.animate_movement()
-        else:
+            self.end = 32
+            if self.collide_block('x') or self.collide_block('y'):  # If no collision, animate movement
+                self.change_direction()
+        elif self.start != self.end:
             self.animate_movement()
 
-    def move_direction(self):
-        res = math.floor(rd.random() * 4)
-        if res == 0:        # Up
-            self.facing = UP
-        elif res == 1:      # Right
-            self.facing = RIGHT
-        elif res == 2:      # Down
-            self.facing = DOWN
-        elif res == 3:      # Left
+    def change_direction(self):
+        if self.facing == RIGHT:
             self.facing = LEFT
+        elif self.facing == LEFT:
+            self.facing = RIGHT
+
+        if self.facing == DOWN:
+            self.facing = UP
+        elif self.facing == UP:
+            self.facing = DOWN
 
     def collide_block(self, direction):
         hits = None
@@ -289,33 +292,24 @@ class Balloon(Enemy):
         return True if hits else False
 
     def animate_movement(self):
+
         if self.facing == DOWN:
-            if self.start == 0 and self.end == 0:
-                self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
-                self.animation_loop = 0
-            else:
-                self.rect.y += self.speed
+            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            self.rect.y += self.speed
 
         if self.facing == UP:
-            if self.start == 0 and self.end == 0:
-                self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
-                self.animation_loop = 0
-            else:
-                self.rect.y += self.speed
+            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            self.rect.y -= self.speed
 
         if self.facing == LEFT:
-            if self.start == 0 and self.end == 0:
-                self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
-                self.animation_loop = 0
-            else:
-                self.rect.y += self.speed
+            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            self.rect.x -= self.speed
 
-        if self.start == 0 and self.end == 0:
-            if self.start == 0 and self.end == 0:
-                self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
-                self.animation_loop = 0
-            else:
-                self.rect.y += self.speed
+        if self.facing == RIGHT:
+            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            self.rect.x += self.speed
+
+        self.start += self.speed
 
 
 class Block(pygame.sprite.Sprite):

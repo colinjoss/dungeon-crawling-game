@@ -18,6 +18,7 @@ RIGHT = 'R'
 LEFT = 'L'
 
 PLAYER_SPEED = 32
+ENEMY_SPEED = 1
 
 FPS = 60
 

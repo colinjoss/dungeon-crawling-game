@@ -37,7 +37,7 @@ def start_tree():
 
 def generate_starting_maps(game):
 
-    rows0, columns0 = get_random_dimensions()       # Get random dimensions
+    rows0, columns0 = 9+24, 9+24                          # Get random dimensions
     rows1, columns1 = get_random_dimensions()
 
     matrix0 = generate_room(rows0, columns0)        # Generate matrix for first and second rooms
@@ -45,6 +45,7 @@ def generate_starting_maps(game):
 
     randomize_items(matrix0, rows0, columns0)
     randomize_items(matrix1, rows1, columns1)
+    randomize_enemies(matrix1, rows1, columns1)
 
     door_nums_0, door_coords_0 = [], []             # Place connecting door in first room
     corners = get_door_coordinates(rows0, columns0)
@@ -85,6 +86,7 @@ def generate_next_maps(game, room):
         matrix = generate_room(rows, columns)       # Create matrix
 
         randomize_items(matrix, rows, columns)      # Place items
+        randomize_enemies(matrix, rows, columns)
 
         door_nums, door_coords = [], []
         corners = get_door_coordinates(rows, columns)
@@ -132,8 +134,6 @@ def generate_room(rows, columns):
             floor = randomize_floor(columns - 24)
             matrix.append((['B'] * 12) + floor + (['B'] * 12))
 
-    matrix[14][14] = 'Eb'
-
     return matrix
 
 
@@ -166,6 +166,27 @@ def place_items(matrix, rows, columns, n):
         c = math.floor(rd.random() * (columns - 24))
         if matrix[r+12][c+12] == '.' or matrix[r+12][c+12] == '..':
             matrix[r+12][c+12] = items[math.floor(rd.random() * 6)]
+
+
+def randomize_enemies(matrix, rows, columns):
+    res = int(rd.random() * 100)
+    n = 1
+    if res > 90:        # Four enemies
+        n = 4
+    elif res > 80:      # Three enemies
+        n = 3
+    elif res > 50:      # Two enemies
+        n = 2
+    place_enemies(matrix, rows, columns, n)
+
+
+def place_enemies(matrix, rows, columns, n):
+    enemies = ['Eb']
+    for i in range(0, n):
+        r = math.floor(rd.random() * (rows - 24))
+        c = math.floor(rd.random() * (columns - 24))
+        if matrix[r + 12][c + 12] == '.' or matrix[r + 12][c + 12] == '..':
+            matrix[r + 12][c + 12] = enemies[math.floor(rd.random() * 1)]
 
 
 def get_random_dimensions():
