@@ -21,7 +21,7 @@ class Game:
         self.bg = None
         self.music = None
 
-        self.character_sheet = SpriteSheet('img/player_sheet1.png')
+        self.character_sheet = SpriteSheet('img/player_sheet.png')
         self.enemy_sheet = SpriteSheet('img/enemy_sheet.png')
         self.terrain_sheet = SpriteSheet('img/terrain_sheet.png')
         self.door_sheet = SpriteSheet('img/door_sheet.png')

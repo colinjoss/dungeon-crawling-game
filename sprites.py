@@ -189,6 +189,10 @@ class Player(pygame.sprite.Sprite):
         if self.game.loc.data[self.rel_y//32][self.rel_x//32] in items:
             self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
 
+    def death(self):
+        self.image = self.game.character_sheet.get_sprite(128, 0, self.width, self.height)
+        self.game.draw()
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, game):
@@ -204,6 +208,7 @@ class Enemy(pygame.sprite.Sprite):
         hits = pygame.sprite.collide_rect(self.game.player, self)
         if hits:
             pygame.mixer.Sound.play(DAMAGE)
+            self.game.player.death()
 
 
 class Balloon(Enemy):
@@ -255,7 +260,7 @@ class Balloon(Enemy):
         if self.start == self.end:
             self.start, self.end = 0, 0
             self.end = 32
-            if self.collide_block('x') or self.collide_block('y'):  # If no collision, animate movement
+            if self.collide_block():  # If no collision, animate movement
                 self.change_direction()
         elif self.start != self.end:
             self.animate_movement()
@@ -271,7 +276,7 @@ class Balloon(Enemy):
         elif self.facing == UP:
             self.facing = DOWN
 
-    def collide_block(self, direction):
+    def collide_block(self):
         hits = None
         if self.facing == UP:
             self.rect.y -= self.end
