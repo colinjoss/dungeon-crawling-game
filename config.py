@@ -36,6 +36,7 @@ SELECT = pygame.mixer.Sound('sound/effects/select.wav')
 WALL = pygame.mixer.Sound('sound/effects/wall.wav')
 EAT = pygame.mixer.Sound('sound/effects/bite.wav')
 DOOR = pygame.mixer.Sound('sound/effects/door3.wav')
+DAMAGE = pygame.mixer.Sound('sound/effects/damage.wav')
 
 print(pygame.font.get_fonts())
 TITLE_FONT = pygame.font.SysFont('bauhaus93', 64)

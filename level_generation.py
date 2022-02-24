@@ -132,6 +132,8 @@ def generate_room(rows, columns):
             floor = randomize_floor(columns - 24)
             matrix.append((['B'] * 12) + floor + (['B'] * 12))
 
+    matrix[14][14] = 'Eb'
+
     return matrix
 
 

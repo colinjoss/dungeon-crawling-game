@@ -22,6 +22,7 @@ class Game:
         self.music = None
 
         self.character_sheet = SpriteSheet('img/player_sheet1.png')
+        self.enemy_sheet = SpriteSheet('img/enemy_sheet.png')
         self.terrain_sheet = SpriteSheet('img/terrain_sheet.png')
         self.door_sheet = SpriteSheet('img/door_sheet.png')
         self.items_sheet = SpriteSheet('img/items_sheet.png')
@@ -65,6 +66,8 @@ class Game:
                     Block(self, x, y)
                 elif col == 'P':
                     self.player = Player(self, x, y)
+                elif col == 'Eb':
+                    Balloon(self, x, y)
                 elif col == 'Ch':
                     Cherry(self, x, y)
                 elif col == 'Ba':
