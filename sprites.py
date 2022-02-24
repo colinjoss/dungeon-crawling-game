@@ -190,8 +190,19 @@ class Player(pygame.sprite.Sprite):
             self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
 
     def death(self):
+        # Death sound effect
         self.image = self.game.character_sheet.get_sprite(128, 0, self.width, self.height)
+        self.game.lives -= 1
         self.game.draw()
+        pygame.time.delay(3000)
+
+        self.game.kill_map()
+        self.game.screen.fill(BLACK)
+
+        if self.game.lives == 0:
+            self.game.game_over()
+        else:
+            self.game.load_room(self.game.loc, (len(self.game.loc.data)//2, len(self.game.loc.data[0])//2))
 
 
 class Enemy(pygame.sprite.Sprite):

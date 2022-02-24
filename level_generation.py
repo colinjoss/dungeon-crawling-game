@@ -213,11 +213,7 @@ def get_door_coordinates(rows, columns):
 
 
 def create_player_spawn(rows, columns, matrix):
-    while True:
-        player = (rows // 2), (columns // 2)
-        if isinstance(matrix[player[0]][player[1]], int):
-            continue
-        break
+    player = (rows // 2), (columns // 2)
     return player
 
 
