@@ -40,6 +40,6 @@ DOOR = pygame.mixer.Sound('sound/effects/door3.wav')
 DAMAGE = pygame.mixer.Sound('sound/effects/damage.wav')
 GAME_OVER = pygame.mixer.Sound('sound/effects/game_over.wav')
 
-print(pygame.font.get_fonts())
 TITLE_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 36)
 TITLE_MENU_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 22)
+SMALL_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 16)

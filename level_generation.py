@@ -37,7 +37,7 @@ def start_tree():
 
 def generate_starting_maps(game):
 
-    rows0, columns0 = 9+24, 9+24                          # Get random dimensions
+    rows0, columns0 = 5+24, 5+24                          # Get random dimensions
     rows1, columns1 = get_random_dimensions()
 
     matrix0 = generate_room(rows0, columns0)        # Generate matrix for first and second rooms
@@ -147,15 +147,15 @@ def randomize_floor(length):
 
 def randomize_items(matrix, rows, columns):
     res = rd.random()
-    n = 0
+    n = 10
     if res > 0.99:      # Ten items
-        n = 5
+        n = 10
     elif res > 0.90:    # Five items
-        n = 3
+        n = 10
     elif res > 0.70:    # Three items
-        n = 2
+        n = 10
     elif res > 0.50:    # One item
-        n = 1
+        n = 10
     place_items(matrix, rows, columns, n)
 
 

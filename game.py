@@ -30,6 +30,7 @@ class Game:
         self.life = pygame.image.load('img/life.png')
         self.life.set_colorkey(NASTY_GREEN)
         self.lives = 3
+        self.fruit_count = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.all_sprites_not_player = pygame.sprite.LayeredUpdates()
@@ -42,9 +43,13 @@ class Game:
         self.loc = None
         self.visited = [0]
         self.unvisited = 0
+
         self.depth = 0
-        self.level = 0
-        self.worlds = [0, 5, 10, 15, 20]
+        self.level = 0     #0  1  2   3   4   5
+        self.change = False
+        self.progression = [0, 5, 10, 15, 20, 25]
+        self.regression = [-1, -1, 4, 9, 14, 19]
+
         self.paths = 0
         self.used_doors = []
 
@@ -73,7 +78,7 @@ class Game:
                 elif col == 'P':
                     self.player = Player(self, x, y)
                 elif col == 'Eb':
-                    Balloon(self, x, y)
+                    Blue(self, x, y)
                 elif col == 'Ch':
                     Cherry(self, x, y)
                 elif col == 'Ba':
@@ -125,25 +130,71 @@ class Game:
         self.all_sprites.update()
 
     def draw(self):
-        if self.depth == 20:
-            pygame.quit()
+        self.change_level_by_depth()
 
-        if self.depth == self.worlds[self.level]:
+        self.screen.blit(self.bg, (0, 0))
+        self.all_sprites.draw(self.screen)
+
+        self.blit_lives()
+        self.blit_fruit_count()
+
+        self.clock.tick(FPS)
+        pygame.display.update()
+
+    def change_level_by_depth(self):
+
+        print(self.level)
+
+        if self.depth == 0 and self.level == 0:
             self.bg = pygame.image.load(BACKGROUND[self.level])
             pygame.mixer.music.load(MUSIC[self.level])
             pygame.mixer.music.play(-1)
             self.level += 1
 
-        self.screen.blit(self.bg, (0, 0))
-        self.all_sprites.draw(self.screen)
+        # depth == 0, level == 1
 
+        if self.depth == self.progression[self.level]:
+            self.bg = pygame.image.load(BACKGROUND[self.level])
+            pygame.mixer.music.load(MUSIC[self.level])
+            pygame.mixer.music.play(-1)
+            self.level += 1
+
+        if self.depth == self.regression[self.level]:
+            self.bg = pygame.image.load(BACKGROUND[self.level-2])
+            pygame.mixer.music.load(MUSIC[self.level-2])
+            pygame.mixer.music.play(-1)
+            self.level -= 1
+
+
+    def blit_lives(self):
+        # Blit lives to top left
         x = 0
         for life in range(0, self.lives):
             self.screen.blit(self.life, (x, 0))
             x += 32
 
-        self.clock.tick(FPS)
-        pygame.display.update()
+    def blit_fruit_count(self):
+        # Blit fruit to top left
+        x1, x2 = 0, 160
+        for fruit in range(0, 6):
+            self.screen.blit(self.items_sheet.get_sprite(x1, 0, 32, 32), (x2, 0))
+            x1 += 32
+            x2 += 80
+
+        # Blit fruit counts to top left
+        x = 192
+        for i in range(0, 6):
+            count = self.fruit_count[i]
+            ones = count % 10
+            tens = count // 10
+            hunds = count // 100
+
+            t = SMALL_FONT.render(str(hunds) + str(tens) + str(ones), True, 'white')
+            t_rect = t.get_rect()
+            t_rect.center = (x, 0)
+
+            self.screen.blit(t, (x, 9))
+            x += 80
 
     def main(self):
         while self.playing:
@@ -222,12 +273,6 @@ class Game:
                         return
 
             pygame.display.update()
-
-    def select(self, text, text_rect):
-        pass
-
-    def unselect(self, text_rect):
-        pass
 
     def instructions_screen(self):
         pass

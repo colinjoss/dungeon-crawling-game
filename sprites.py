@@ -222,7 +222,7 @@ class Enemy(pygame.sprite.Sprite):
             self.game.player.death()
 
 
-class Balloon(Enemy):
+class Blue(Enemy):
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
@@ -251,19 +251,27 @@ class Balloon(Enemy):
 
         self.down_animations = [
             self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(0, 32, self.width, self.height)
+            self.game.enemy_sheet.get_sprite(0, 32, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 64, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height)
         ]
         self.up_animations = [
             self.game.enemy_sheet.get_sprite(32, 0, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(32, 32, self.width, self.height)
+            self.game.enemy_sheet.get_sprite(32, 32, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 64, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 96, self.width, self.height)
         ]
         self.left_animations = [
             self.game.enemy_sheet.get_sprite(64, 0, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(64, 32, self.width, self.height)
+            self.game.enemy_sheet.get_sprite(64, 32, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 64, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 96, self.width, self.height)
         ]
         self.right_animations = [
             self.game.enemy_sheet.get_sprite(96, 0, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(96, 32, self.width, self.height)
+            self.game.enemy_sheet.get_sprite(96, 32, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 64, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 96, self.width, self.height)
         ]
 
     def update(self):
@@ -309,23 +317,61 @@ class Balloon(Enemy):
 
     def animate_movement(self):
 
+        animation_frame_1 = 8
+        animation_frame_2 = 16
+        animation_frame_3 = 24
+
         if self.facing == DOWN:
-            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            if self.start < animation_frame_1:
+                self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            elif self.start < animation_frame_2:
+                self.image = self.game.enemy_sheet.get_sprite(0, 32, self.width, self.height)
+            elif self.start < animation_frame_3:
+                self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            else:
+                self.image = self.game.enemy_sheet.get_sprite(0, 64, self.width, self.height)
+
             self.rect.y += self.speed
 
         if self.facing == UP:
-            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            if self.start < animation_frame_1:
+                self.image = self.game.enemy_sheet.get_sprite(32, 0, self.width, self.height)
+            elif self.start < animation_frame_2:
+                self.image = self.game.enemy_sheet.get_sprite(32, 32, self.width, self.height)
+            elif self.start < animation_frame_3:
+                self.image = self.game.enemy_sheet.get_sprite(32, 0, self.width, self.height)
+            else:
+                self.image = self.game.enemy_sheet.get_sprite(32, 64, self.width, self.height)
+
             self.rect.y -= self.speed
 
         if self.facing == LEFT:
-            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            if self.start < animation_frame_1:
+                self.image = self.game.enemy_sheet.get_sprite(64, 0, self.width, self.height)
+            elif self.start < animation_frame_2:
+                self.image = self.game.enemy_sheet.get_sprite(64, 32, self.width, self.height)
+            elif self.start < animation_frame_3:
+                self.image = self.game.enemy_sheet.get_sprite(64, 0, self.width, self.height)
+            else:
+                self.image = self.game.enemy_sheet.get_sprite(64, 64, self.width, self.height)
+
             self.rect.x -= self.speed
 
         if self.facing == RIGHT:
-            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+            if self.start < animation_frame_1:
+                self.image = self.game.enemy_sheet.get_sprite(96, 0, self.width, self.height)
+            elif self.start < animation_frame_2:
+                self.image = self.game.enemy_sheet.get_sprite(96, 32, self.width, self.height)
+            elif self.start < animation_frame_3:
+                self.image = self.game.enemy_sheet.get_sprite(96, 0, self.width, self.height)
+            else:
+                self.image = self.game.enemy_sheet.get_sprite(96, 64, self.width, self.height)
+
             self.rect.x += self.speed
 
         self.start += self.speed
+
+
 
 
 class Block(pygame.sprite.Sprite):
@@ -434,6 +480,7 @@ class Item(pygame.sprite.Sprite):
         if hits:
             pygame.mixer.Sound.play(EAT)
             self.kill()
+            self.game.fruit_count[self.code] += 1
 
 
 class Cherry(Item):
@@ -454,6 +501,8 @@ class Cherry(Item):
         self.rect.x = self.x
         self.rect.y = self.y
 
+        self.code = 0
+
 
 class Banana(Item):
     def __init__(self, game, x, y):
@@ -472,6 +521,8 @@ class Banana(Item):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+        self.code = 1
 
 
 class Melon(Item):
@@ -492,6 +543,8 @@ class Melon(Item):
         self.rect.x = self.x
         self.rect.y = self.y
 
+        self.code = 2
+
 
 class Grape(Item):
     def __init__(self, game, x, y):
@@ -510,6 +563,8 @@ class Grape(Item):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+        self.code = 3
 
 
 class Orange(Item):
@@ -530,6 +585,8 @@ class Orange(Item):
         self.rect.x = self.x
         self.rect.y = self.y
 
+        self.code = 4
+
 
 class Apple(Item):
     def __init__(self, game, x, y):
@@ -548,3 +605,5 @@ class Apple(Item):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+        self.code = 5
