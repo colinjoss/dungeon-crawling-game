@@ -205,6 +205,40 @@ class Player(pygame.sprite.Sprite):
             self.game.load_room(self.game.loc, (len(self.game.loc.data)//2, len(self.game.loc.data[0])//2))
 
 
+class NPC(pygame.sprite.Sprite):
+    def __init__(self, game):
+        self.game = game
+        self.groups = self.game.all_sprites
+        self.animation_loop = 0
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+
+class ShopKeep(NPC):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.npc_sheet.get_sprite(0, 0, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+        self.animation_loop = 0
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+    def update(self):
+        self.animation_loop += 1
+        if self.animation_loop < 40:
+            self.image = self.game.npc_sheet.get_sprite(0, 32, self.width, self.height)
+        elif self.animation_loop < 80:
+            self.image = self.game.npc_sheet.get_sprite(0, 0, self.width, self.height)
+        else:
+            self.animation_loop = 0
+
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, game):
         self.game = game
@@ -370,8 +404,6 @@ class Blue(Enemy):
             self.rect.x += self.speed
 
         self.start += self.speed
-
-
 
 
 class Block(pygame.sprite.Sprite):

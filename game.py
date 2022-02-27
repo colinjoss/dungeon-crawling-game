@@ -8,6 +8,7 @@ import sys
 import random
 from generate_bg import work
 import level_generation as level
+import rpyc
 
 
 class Game:
@@ -23,6 +24,7 @@ class Game:
 
         self.character_sheet = SpriteSheet('img/player_sheet.png')
         self.enemy_sheet = SpriteSheet('img/enemy_sheet.png')
+        self.npc_sheet = SpriteSheet('img/npc_sheet.png')
         self.terrain_sheet = SpriteSheet('img/terrain_sheet.png')
         self.door_sheet = SpriteSheet('img/door_sheet.png')
         self.items_sheet = SpriteSheet('img/items_sheet.png')
@@ -47,8 +49,12 @@ class Game:
         self.depth = 0
         self.level = 0     #0  1  2   3   4   5
         self.change = False
-        self.progression = [0, 5, 10, 15, 20, 25]
+        self.progression = [1, 5, 10, 15, 20, 25]
         self.regression = [-1, -1, 4, 9, 14, 19]
+
+        self.home = True
+        self.shop = False
+        self.challenge = False
 
         self.paths = 0
         self.used_doors = []
@@ -77,6 +83,8 @@ class Game:
                     Block(self, x, y)
                 elif col == 'P':
                     self.player = Player(self, x, y)
+                elif col == 'S':
+                    ShopKeep(self, x, y)
                 elif col == 'Eb':
                     Blue(self, x, y)
                 elif col == 'Ch':
@@ -119,9 +127,6 @@ class Game:
                 self.playing = False
                 self.running = False
 
-    def step_events(self):
-        pass
-
     def kill_map(self):
         for sprite in self.all_sprites:
             sprite.kill()
@@ -143,23 +148,27 @@ class Game:
 
     def change_level_by_depth(self):
 
-        print(self.level)
+        if self.home:
+            self.bg = pygame.image.load(HOME)
+            pygame.mixer.music.load(SHOP)
+            pygame.mixer.music.play(-1)
+            self.home = False
 
-        if self.depth == 0 and self.level == 0:
+        elif self.depth == 1 and self.level == 0:
             self.bg = pygame.image.load(BACKGROUND[self.level])
             pygame.mixer.music.load(MUSIC[self.level])
             pygame.mixer.music.play(-1)
             self.level += 1
 
-        # depth == 0, level == 1
-
-        if self.depth == self.progression[self.level]:
+        elif self.depth == self.progression[self.level]:
+            # conn = rpyc.connect("IP", 18861)
+            # image = conn.root.exposed_get_image("Forest", "C:\\Temp")
             self.bg = pygame.image.load(BACKGROUND[self.level])
             pygame.mixer.music.load(MUSIC[self.level])
             pygame.mixer.music.play(-1)
             self.level += 1
 
-        if self.depth == self.regression[self.level]:
+        elif self.depth == self.regression[self.level]:
             self.bg = pygame.image.load(BACKGROUND[self.level-2])
             pygame.mixer.music.load(MUSIC[self.level-2])
             pygame.mixer.music.play(-1)
@@ -200,7 +209,6 @@ class Game:
         while self.playing:
             self.button_events()
             self.update()
-            self.step_events()
             self.draw()
 
     def game_over(self):

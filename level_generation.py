@@ -37,19 +37,21 @@ def start_tree():
 
 def generate_starting_maps(game):
 
-    rows0, columns0 = 5+24, 5+24                          # Get random dimensions
+    rows0, columns0 = 10+24, 20+24                          # Get random dimensions
     rows1, columns1 = get_random_dimensions()
 
     matrix0 = generate_room(rows0, columns0)        # Generate matrix for first and second rooms
     matrix1 = generate_room(rows1, columns1)
 
-    randomize_items(matrix0, rows0, columns0)
+
+
     randomize_items(matrix1, rows1, columns1)
     randomize_enemies(matrix1, rows1, columns1)
 
     door_nums_0, door_coords_0 = [], []             # Place connecting door in first room
     corners = get_door_coordinates(rows0, columns0)
-    create_door(door_nums_0, door_coords_0, corners, matrix0)
+    matrix0[corners[1][0]][corners[1][1]] = 'S'
+    create_door(door_nums_0, door_coords_0, [corners[-1]], matrix0)
 
     player = create_player_spawn(rows0, columns0, matrix0)   # Place player in first room
 
