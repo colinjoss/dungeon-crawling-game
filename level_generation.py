@@ -37,13 +37,11 @@ def start_tree():
 
 def generate_starting_maps(game):
 
-    rows0, columns0 = 10+24, 20+24                          # Get random dimensions
-    rows1, columns1 = get_random_dimensions()
+    rows0, columns0 = 6+24, 8+24                          # Get random dimensions
+    rows1, columns1 = get_random_dimensions(game)
 
     matrix0 = generate_room(rows0, columns0)        # Generate matrix for first and second rooms
     matrix1 = generate_room(rows1, columns1)
-
-
 
     randomize_items(matrix1, rows1, columns1)
     randomize_enemies(matrix1, rows1, columns1)
@@ -73,6 +71,8 @@ def generate_starting_maps(game):
 
     add_bridge_placeholders(door_nums_1, door_coords_1, room1)     # Add bridge placeholders in second room
 
+    # place_enemy_spawns(matrix1, rows1, columns1)
+
     return room0, player
 
 
@@ -84,7 +84,28 @@ def generate_next_maps(game, room):
         if i == 0:      # Skip first because it's already done
             continue
 
-        rows, columns = get_random_dimensions()     # Get random dimensions
+        n = rd.random()
+        if game.paths > 3 and n > 0.40:
+            dead_end(game, room, key)       # Normal dead end
+            continue
+        elif game.paths > 3 and n > 0.60:
+            # Challenge room dead end
+            pass
+        elif game.paths > 3 and n > 0.80:
+            # Shop room dead end
+            pass
+
+        n = rd.random()
+        if n > 0.80:
+            pass
+            # Enemy-free room!
+
+        n = rd.random()
+        if n > 0.90:
+            pass
+            # Treasure room!
+
+        rows, columns = get_random_dimensions(game)     # Get random dimensions
         matrix = generate_room(rows, columns)       # Create matrix
 
         randomize_items(matrix, rows, columns)      # Place items
@@ -115,6 +136,27 @@ def generate_next_maps(game, room):
     return room
 
 
+def dead_end(game, room, key):
+    rows, columns = 5+24, 5+24  # Get random dimensions
+    matrix = generate_room(rows, columns)  # Create matrix
+
+    door_nums, door_coords = [], []
+    corners = get_door_coordinates(rows, columns)
+    create_door(door_nums, door_coords, corners, matrix)  # Place door connecting in new room
+    game.used_doors.append(door_nums[0])
+
+    new_room = MapNode(next(room_count), matrix)  # Create map node for new room
+
+    bridge1 = BridgeNode(new_room, door_coords[0])  # Create bridge to new room
+    ret_spawn = room.bridges[key]  # Save coord in cur room
+    room.bridges[key] = bridge1
+
+    bridge2 = BridgeNode(room, ret_spawn)
+    new_room.bridges[door_nums[0]] = bridge2
+
+    new_room.data = matrix
+
+
 def get_total_doors():
     seed = int(rd.random() * 100)
     doors = 1           # 100% chance of second door
@@ -140,34 +182,41 @@ def generate_room(rows, columns):
 
 
 def randomize_floor(length):
-    ground = ['.', '..']
+    ground = ['.']
     result = []
     for i in range(0, length):
-        result.append(ground[math.floor(2 * rd.random())])
+        result.append(ground[math.floor(1 * rd.random())])
     return result
 
 
 def randomize_items(matrix, rows, columns):
     res = rd.random()
     n = 10
-    if res > 0.99:      # Ten items
+    if res > 0.80:
         n = 10
-    elif res > 0.90:    # Five items
+    elif res > 0.65:
         n = 10
-    elif res > 0.70:    # Three items
+    elif res > 0.40:
         n = 10
-    elif res > 0.50:    # One item
+    elif res > 0.20:
         n = 10
     place_items(matrix, rows, columns, n)
 
 
 def place_items(matrix, rows, columns, n):
     items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
+    r, c = rows-28, columns-28
+
+    # for i in range(0, r):
+    #     for j in range(0, c):
+    #         if matrix[i + 14][j + 14] == '.':
+    #             matrix[i + 14][j + 14] = items[math.floor(rd.random() * 6)]
+
     for i in range(0, n):
-        r = math.floor(rd.random() * (rows - 24))
-        c = math.floor(rd.random() * (columns - 24))
-        if matrix[r+12][c+12] == '.' or matrix[r+12][c+12] == '..':
-            matrix[r+12][c+12] = items[math.floor(rd.random() * 6)]
+        r = math.floor(rd.random() * (rows - 28))
+        c = math.floor(rd.random() * (columns - 28))
+        if matrix[r+14][c+14] == '.':
+            matrix[r+14][c+14] = items[math.floor(rd.random() * 6)]
 
 
 def randomize_enemies(matrix, rows, columns):
@@ -191,8 +240,8 @@ def place_enemies(matrix, rows, columns, n):
             matrix[r + 12][c + 12] = enemies[math.floor(rd.random() * 1)]
 
 
-def get_random_dimensions():
-    rows, columns = rd.randint(10, 16), rd.randint(10, 16)  # Get random dimensions
+def get_random_dimensions(game):
+    rows, columns = rd.randint(6, 10) + game.depth, rd.randint(6, 10) + game.depth  # Get random dimensions
     rows, columns = rows + 24, columns + 24  # Adjust rows/columns for border
     return rows, columns
 
@@ -207,6 +256,16 @@ def create_door(door_nums, door_coords, corners, matrix):
     del corners[index]                              # Delete coordinate from corners
 
     matrix[d_coord[0]][d_coord[1]] = d_num          # Assign door to map
+
+
+def place_enemy_spawns(matrix, rows, columns):
+    for i in range(14, columns-14):
+        matrix[12][i] = '..'
+        matrix[rows-13][i] = '..'
+
+    for i in range(14, rows-14):
+        matrix[i][12] = '..'
+        matrix[i][columns-13] = '..'
 
 
 def get_door_coordinates(rows, columns):

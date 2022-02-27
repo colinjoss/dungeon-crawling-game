@@ -47,12 +47,12 @@ class Game:
         self.unvisited = 0
 
         self.depth = 0
-        self.level = 0     #0  1  2   3   4   5
+        self.level = 0
         self.change = False
-        self.progression = [1, 5, 10, 15, 20, 25]
-        self.regression = [-1, -1, 4, 9, 14, 19]
+        self.progression = [1, 20, 40, 60, 80, 100]
+        self.regression = [-1, -1, 19, 39, 59, 79]
 
-        self.home = True
+        self.home = False
         self.shop = False
         self.challenge = False
 
@@ -67,6 +67,7 @@ class Game:
         self.level = 0
         self.paths = 0
         self.used_doors = []
+        self.home = True
 
         tree = level.start_tree()
         tree.head, player = level.generate_starting_maps(self)
@@ -74,6 +75,7 @@ class Game:
         self.load_room(self.loc, player)
 
     def load_room(self, room, player):
+        print(game.paths)
         self.loc = room
         room.data[player[0]+1][player[1]] = 'P'
 
@@ -104,8 +106,8 @@ class Game:
                         Door(self, x, y, col, True)
                     else:
                         Door(self, x, y, col, False)
-                # elif col == '..':
-                #     Ground(self, x, y, 1)
+                elif col == '..':
+                    Ground(self, x, y, 1)
                 else:
                     Ground(self, x, y, 0)
 
