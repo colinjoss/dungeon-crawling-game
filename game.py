@@ -152,7 +152,7 @@ class Game:
 
         if self.home:
             self.bg = pygame.image.load(HOME)
-            pygame.mixer.music.load(SHOP)
+            pygame.mixer.music.load(OCEAN)
             pygame.mixer.music.play(-1)
             self.home = False
 

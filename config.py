@@ -32,6 +32,7 @@ HOME = 'img/bg/shore.jpg'
 
 MUSIC = ['sound/music/sunset.mp3', 'sound/music/funk.mp3', 'sound/music/wizard.mp3', 'sound/music/garden.mp3']
 MENU_MUSIC = 'sound/music/menu.mp3'
+OCEAN = 'sound/music/ocean.mp3'
 SHOP = 'sound/music/shop.mp3'
 
 CHANGE_OPTION = pygame.mixer.Sound('sound/effects/change_option.wav')
