@@ -35,7 +35,8 @@ class Game:
         self.fruit_count = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
         self.all_sprites = pygame.sprite.LayeredUpdates()
-        self.all_sprites_not_player = pygame.sprite.LayeredUpdates()
+        self.all_doors = pygame.sprite.LayeredUpdates()
+        self.all_enemies = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.doors = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
@@ -57,7 +58,8 @@ class Game:
         self.challenge = False
 
         self.paths = 0
-        self.used_doors = []
+        self.unopened_doors = []
+        self.locked_doors = []
 
     def start(self):
         self.lives = 3
@@ -75,7 +77,6 @@ class Game:
         self.load_room(self.loc, player)
 
     def load_room(self, room, player):
-        print(game.paths)
         self.loc = room
         room.data[player[0]+1][player[1]] = 'P'
 
@@ -102,10 +103,12 @@ class Game:
                 elif col == 'Ap':
                     Apple(self, x, y)
                 elif isinstance(col, int):
-                    if col in self.used_doors:
-                        Door(self, x, y, col, True)
+                    if col in self.locked_doors:
+                        Door(self, x, y, col, True, True)
+                    elif col in self.unopened_doors:
+                        Door(self, x, y, col, False, True)
                     else:
-                        Door(self, x, y, col, False)
+                        Door(self, x, y, col, False, False)
                 elif col == '..':
                     Ground(self, x, y, 1)
                 else:
@@ -134,6 +137,13 @@ class Game:
             sprite.kill()
 
     def update(self):
+
+        if self.loc.fruit == 0 and self.loc.cleared == False:
+            for door in self.all_doors:
+                door.unlock()
+            for enemy in self.all_enemies:
+                enemy.defeat()
+
         self.all_sprites.update()
 
     def draw(self):
@@ -175,7 +185,6 @@ class Game:
             pygame.mixer.music.load(MUSIC[self.level-2])
             pygame.mixer.music.play(-1)
             self.level -= 1
-
 
     def blit_lives(self):
         # Blit lives to top left

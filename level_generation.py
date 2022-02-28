@@ -8,10 +8,12 @@ class MapTree:
 
 
 class MapNode:
-    def __init__(self, num, data):
+    def __init__(self, num, data, fruit):
         self.num = num
         self.data = data
         self.bridges = {}
+        self.fruit = fruit
+        self.cleared = False
 
 
 class BridgeNode:
@@ -43,25 +45,26 @@ def generate_starting_maps(game):
     matrix0 = generate_room(rows0, columns0)        # Generate matrix for first and second rooms
     matrix1 = generate_room(rows1, columns1)
 
-    randomize_items(matrix1, rows1, columns1)
+    fruit = randomize_items(matrix1, rows1, columns1)
     randomize_enemies(matrix1, rows1, columns1)
 
     door_nums_0, door_coords_0 = [], []             # Place connecting door in first room
     corners = get_door_coordinates(rows0, columns0)
     matrix0[corners[1][0]][corners[1][1]] = 'S'
-    create_door(door_nums_0, door_coords_0, [corners[-1]], matrix0)
+    create_door(door_nums_0, door_coords_0, [corners[-1]], matrix0, game)
 
     player = create_player_spawn(rows0, columns0, matrix0)   # Place player in first room
 
     door_nums_1, door_coords_1 = [], []                      # Place 2 doors in second room
     corners = get_door_coordinates(rows1, columns1)
-    create_door(door_nums_1, door_coords_1, corners, matrix1)
+    create_door(door_nums_1, door_coords_1, corners, matrix1, game)
+    game.unopened_doors.pop()
     game.used_doors.append(door_nums_1[0])
-    create_door(door_nums_1, door_coords_1, corners, matrix1)
+    create_door(door_nums_1, door_coords_1, corners, matrix1, game)
     game.paths += 1
 
-    room0 = MapNode(next(room_count), matrix0)      # Create map node for rooms
-    room1 = MapNode(next(room_count), matrix1)
+    room0 = MapNode(next(room_count), matrix0, 0)      # Create map node for rooms
+    room1 = MapNode(next(room_count), matrix1, fruit)
 
     bridge1 = BridgeNode(room1, door_coords_1[0])     # Create bridges between first and second rooms
     bridge2 = BridgeNode(room0, door_coords_0[0])
@@ -108,15 +111,15 @@ def generate_next_maps(game, room):
         rows, columns = get_random_dimensions(game)     # Get random dimensions
         matrix = generate_room(rows, columns)       # Create matrix
 
-        randomize_items(matrix, rows, columns)      # Place items
+        fruit = randomize_items(matrix, rows, columns)      # Place items
         randomize_enemies(matrix, rows, columns)
 
         door_nums, door_coords = [], []
         corners = get_door_coordinates(rows, columns)
-        create_door(door_nums, door_coords, corners, matrix)    # Place door connecting in new room
-        game.used_doors.append(door_nums[0])
+        create_door(door_nums, door_coords, corners, matrix, game)    # Place door connecting in new room
+        game.unopened_doors.pop()
 
-        new_room = MapNode(next(room_count), matrix)    # Create map node for new room
+        new_room = MapNode(next(room_count), matrix, fruit)    # Create map node for new room
 
         bridge1 = BridgeNode(new_room, door_coords[0])  # Create bridge to new room
         ret_spawn = room.bridges[key]   # Save coord in cur room
@@ -126,7 +129,7 @@ def generate_next_maps(game, room):
         new_room.bridges[door_nums[0]] = bridge2
 
         for i in range(0, get_total_doors()):
-            create_door(door_nums, door_coords, corners, matrix)
+            create_door(door_nums, door_coords, corners, matrix, game)
             game.paths += 1
 
         add_bridge_placeholders(door_nums, door_coords, new_room)    # Add bridge placeholders in second room
@@ -142,10 +145,11 @@ def dead_end(game, room, key):
 
     door_nums, door_coords = [], []
     corners = get_door_coordinates(rows, columns)
-    create_door(door_nums, door_coords, corners, matrix)  # Place door connecting in new room
+    create_door(door_nums, door_coords, corners, matrix, game)  # Place door connecting in new room
+    game.unopened_doors.pop()
     game.used_doors.append(door_nums[0])
 
-    new_room = MapNode(next(room_count), matrix)  # Create map node for new room
+    new_room = MapNode(next(room_count), matrix, 0)  # Create map node for new room
 
     bridge1 = BridgeNode(new_room, door_coords[0])  # Create bridge to new room
     ret_spawn = room.bridges[key]  # Save coord in cur room
@@ -200,23 +204,26 @@ def randomize_items(matrix, rows, columns):
         n = 10
     elif res > 0.20:
         n = 10
-    place_items(matrix, rows, columns, n)
+    return place_items(matrix, rows, columns, n)
 
 
 def place_items(matrix, rows, columns, n):
     items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
-    r, c = rows-28, columns-28
 
     # for i in range(0, r):
     #     for j in range(0, c):
     #         if matrix[i + 14][j + 14] == '.':
     #             matrix[i + 14][j + 14] = items[math.floor(rd.random() * 6)]
 
+    count = 0
     for i in range(0, n):
         r = math.floor(rd.random() * (rows - 28))
         c = math.floor(rd.random() * (columns - 28))
         if matrix[r+14][c+14] == '.':
             matrix[r+14][c+14] = items[math.floor(rd.random() * 6)]
+            count += 1
+
+    return count
 
 
 def randomize_enemies(matrix, rows, columns):
@@ -246,7 +253,7 @@ def get_random_dimensions(game):
     return rows, columns
 
 
-def create_door(door_nums, door_coords, corners, matrix):
+def create_door(door_nums, door_coords, corners, matrix, game):
     d_num = next(door_count)                        # Increment the door count
     door_nums.append(d_num)                         # Save door number
 
@@ -256,6 +263,10 @@ def create_door(door_nums, door_coords, corners, matrix):
     del corners[index]                              # Delete coordinate from corners
 
     matrix[d_coord[0]][d_coord[1]] = d_num          # Assign door to map
+
+    if d_num != 0:
+        game.locked_doors.append(d_num)
+    game.unopened_doors.append(d_num)
 
 
 def place_enemy_spawns(matrix, rows, columns):

@@ -80,6 +80,7 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         self.check_feet()
         if self.start == self.end:
+
             self.rel_x += self.x_change
             self.rel_y += self.y_change
             self.start, self.end = 0, 0
@@ -186,8 +187,11 @@ class Player(pygame.sprite.Sprite):
 
     def check_feet(self):
         items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
+
         if self.game.loc.data[self.rel_y//32][self.rel_x//32] in items:
             self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
+            self.game.loc.fruit -= 1
+            print(self.game.loc.fruit)
 
     def death(self):
         # Death sound effect
@@ -242,7 +246,7 @@ class ShopKeep(NPC):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, game):
         self.game = game
-        self.groups = self.game.all_sprites
+        self.groups = self.game.all_sprites, self.game.all_enemies
         self.x_change = 0
         self.y_change = 0
         self.animation_loop = 0
@@ -254,6 +258,9 @@ class Enemy(pygame.sprite.Sprite):
         if hits:
             pygame.mixer.Sound.play(DAMAGE)
             self.game.player.death()
+
+    def defeat(self):
+        self.kill()
 
 
 class Blue(Enemy):
@@ -447,10 +454,10 @@ class Ground(pygame.sprite.Sprite):
 
 
 class Door(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, n, used):
+    def __init__(self, game, x, y, n, locked, unopened):
         self.game = game
         self._layer = GROUND_LAYER
-        self.groups = self.game.all_sprites
+        self.groups = self.game.all_sprites, self.game.all_doors
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.number = n
@@ -460,9 +467,11 @@ class Door(pygame.sprite.Sprite):
         self.width = TILE_SIZE
         self.height = TILE_SIZE
 
-        if not used:
+        if locked:
+            self.image = self.game.door_sheet.get_sprite(64, 0, self.width, self.height)
+        elif unopened:
             self.image = self.game.door_sheet.get_sprite(0, 0, self.width, self.height)
-        else:
+        else:   # used doors
             self.image = self.game.door_sheet.get_sprite(32, 0, self.width, self.height)
 
         self.rect = self.image.get_rect()
@@ -478,6 +487,12 @@ class Door(pygame.sprite.Sprite):
             if self.number not in self.game.used_doors:
                 self.game.used_doors.append(self.number)
 
+            if self.number in self.game.locked_doors:           # Locked door; cannot use
+                return
+            elif self.number in self.game.unopened_doors:       # Unopened door; remove from unopened_doors
+                self.game.unopened_doors.remove(self.number)
+
+            self.game.player.rel_x, self.game.player.rel_y = 0, 0
             self.game.kill_map()
             self.game.screen.fill(BLACK)
 
@@ -496,6 +511,18 @@ class Door(pygame.sprite.Sprite):
             player = self.game.loc.bridges[self.number].spawn
             self.game.player.movement_delay = pygame.time.get_ticks() + 2000
             self.game.load_room(node, player)
+
+    def unlock(self):
+        self.game.loc.cleared = True
+        if self.game.loc.num != 0:
+            self.game.locked_doors.remove(self.number)
+
+        if self.number in self.game.unopened_doors:
+            self.image = self.game.door_sheet.get_sprite(0, 0, self.width, self.height)
+        else:
+            self.image = self.game.door_sheet.get_sprite(32, 0, self.width, self.height)
+
+        pygame.mixer.Sound.play(CLEAR)
 
 
 class Item(pygame.sprite.Sprite):
