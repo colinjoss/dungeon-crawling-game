@@ -27,7 +27,8 @@ BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 NASTY_GREEN = (181, 230, 29)
 
-BACKGROUND = ['img/bg/sunset.jpg', 'img/bg/space.jpg', 'img/bg/snow.jpg', 'img/bg/garden.jpg']
+# BACKGROUND = ['img/bg/sunset.jpg', 'img/bg/space.jpg', 'img/bg/snow.jpg', 'img/bg/garden.jpg']
+BACKGROUND = ['sunset', 'space', 'mountain', 'garden']
 HOME = 'img/bg/shore.jpg'
 
 MUSIC = ['sound/music/sunset.mp3', 'sound/music/funk.mp3', 'sound/music/wizard.mp3', 'sound/music/garden.mp3']

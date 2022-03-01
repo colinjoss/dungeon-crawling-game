@@ -191,7 +191,6 @@ class Player(pygame.sprite.Sprite):
         if self.game.loc.data[self.rel_y//32][self.rel_x//32] in items:
             self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
             self.game.loc.fruit -= 1
-            print(self.game.loc.fruit)
 
     def death(self):
         # Death sound effect

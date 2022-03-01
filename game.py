@@ -5,7 +5,7 @@ import pygame
 from config import *
 from sprites import *
 import sys
-import random
+import random as rd
 from generate_bg import work
 import level_generation as level
 import rpyc
@@ -50,8 +50,8 @@ class Game:
         self.depth = 0
         self.level = 0
         self.change = False
-        self.progression = [1, 20, 40, 60, 80, 100]
-        self.regression = [-1, -1, 19, 39, 59, 79]
+        self.progression = [1, 5, 10, 15, 20, 100]
+        self.regression = [-1, -1, 4, 9, 14, 19]
 
         self.home = False
         self.shop = False
@@ -60,6 +60,9 @@ class Game:
         self.paths = 0
         self.unopened_doors = []
         self.locked_doors = []
+
+        self.worlds = ['desert', 'forest', 'ocean', 'mountain']
+        self.image_path = "C:\\Users\Colin\Desktop\Master Folder\Projects\Coding\CS361\dungeon-crawling-game\img\\bg"
 
     def start(self):
         self.lives = 3
@@ -138,7 +141,7 @@ class Game:
 
     def update(self):
 
-        if self.loc.fruit == 0 and self.loc.cleared == False:
+        if self.loc.fruit == 0 and self.loc.cleared is False:
             for door in self.all_doors:
                 door.unlock()
             for enemy in self.all_enemies:
@@ -167,21 +170,34 @@ class Game:
             self.home = False
 
         elif self.depth == 1 and self.level == 0:
-            self.bg = pygame.image.load(BACKGROUND[self.level])
+            conn = rpyc.connect("localhost", 18861)
+            image = conn.root.exposed_get_image(BACKGROUND[self.level], self.image_path)
+            self.bg = pygame.image.load(image)
+            conn.close()
+
+            # self.bg = pygame.image.load(BACKGROUND[self.level])
             pygame.mixer.music.load(MUSIC[self.level])
             pygame.mixer.music.play(-1)
             self.level += 1
 
         elif self.depth == self.progression[self.level]:
-            # conn = rpyc.connect("IP", 18861)
-            # image = conn.root.exposed_get_image("Forest", "C:\\Temp")
-            self.bg = pygame.image.load(BACKGROUND[self.level])
+            conn = rpyc.connect("localhost", 18861)
+            image = conn.root.exposed_get_image(BACKGROUND[self.level], self.image_path)
+            self.bg = pygame.image.load(image)
+            conn.close()
+
+            # self.bg = pygame.image.load(BACKGROUND[self.level])
             pygame.mixer.music.load(MUSIC[self.level])
             pygame.mixer.music.play(-1)
             self.level += 1
 
         elif self.depth == self.regression[self.level]:
-            self.bg = pygame.image.load(BACKGROUND[self.level-2])
+            conn = rpyc.connect("localhost", 18861)
+            image = conn.root.exposed_get_image(BACKGROUND[self.level], self.image_path)
+            self.bg = pygame.image.load(image)
+            conn.close()
+
+            # self.bg = pygame.image.load(BACKGROUND[self.level-2])
             pygame.mixer.music.load(MUSIC[self.level-2])
             pygame.mixer.music.play(-1)
             self.level -= 1
