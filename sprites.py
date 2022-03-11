@@ -2,7 +2,7 @@ import pygame
 from config import *
 import level_generation as level
 import math
-import random
+import random as rd
 import time
 
 
@@ -19,38 +19,34 @@ class SpriteSheet:
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
-
+        
+        # Fundamental variables
         self.game = game
         self._layer = PLAYER_LAYER
         self.groups = self.game.all_sprites
-
-        pygame.sprite.Sprite.__init__(self, self.groups)
-
-        self.x = x * TILE_SIZE
-        self.y = y * TILE_SIZE
         self.width = TILE_SIZE
         self.height = TILE_SIZE
+        self.image = self.game.character_sheet.get_sprite(0, 0, self.width, self.height)
+        pygame.sprite.Sprite.__init__(self, self.groups)
 
+        # Movement and size variables
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.rel_x = self.x
+        self.rel_y = self.y
         self.x_change = 0
         self.y_change = 0
-
-        self.start = 0
-        self.end = 0
-
-        self.movement_delay = 0
-        self.sound_delay = 0
-
-        self.facing = 'down'
-        self.animation_loop = 0
-
-        self.image = self.game.character_sheet.get_sprite(0, 0, self.width, self.height)
-
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
 
-        self.rel_x = self.x
-        self.rel_y = self.y
+        # Animation variables
+        self.movement_start = 0
+        self.movement_end = 0
+        self.movement_delay = 0
+        self.sound_delay = 0
+        self.facing = DOWN
+        self.animation_loop = 0
 
         self.down_animations = [
             self.game.character_sheet.get_sprite(0, 0, self.width, self.height),
@@ -78,67 +74,91 @@ class Player(pygame.sprite.Sprite):
         ]
 
     def update(self):
-        self.check_feet()
-        if self.start == self.end:
+        """
+        Updates player character.
+        """
+        self.check_feet()   # Player checks the ground at their current coordinate
 
+        if self.movement_start == self.movement_end:    # No current movement
+
+            # Reset variables from previous movement; update player relative coordinate
             self.rel_x += self.x_change
             self.rel_y += self.y_change
-            self.start, self.end = 0, 0
+            self.movement_start, self.movement_end = 0, 0
             self.x_change, self.y_change = 0, 0
+
+            # Get keyboard input from user
             self.move_direction()
 
-            if self.facing == DOWN and self.y_change == 0:
-                self.image = self.game.character_sheet.get_sprite(0, 0, self.width, self.height)
-                self.animation_loop = 0
-            if self.facing == UP and self.y_change == 0:
-                self.image = self.game.character_sheet.get_sprite(32, 0, self.width, self.height)
-                self.animation_loop = 0
-            if self.facing == LEFT and self.x_change == 0:
-                self.image = self.game.character_sheet.get_sprite(64, 0, self.width, self.height)
-                self.animation_loop = 0
-            if self.facing == RIGHT and self.x_change == 0:
-                self.image = self.game.character_sheet.get_sprite(96, 0, self.width, self.height)
-                self.animation_loop = 0
-
-            if self.collide_block('x') or self.collide_block('y'):
-                if self.sound_delay < pygame.time.get_ticks():
-                    self.sound_delay = pygame.time.get_ticks() + 320
-                    pygame.mixer.Sound.play(WALL)
-                self.x_change = 0
-                self.y_change = 0
-                self.end -= PLAYER_SPEED
+            # Cancel movement if blocked
+            if self.is_collision('x') or self.is_collision('y'):
+                self.cancel_movement()
                 return
 
-        elif self.start != self.end:
+        elif self.movement_start != self.movement_end:      # Movement currently in motion
             self.animate_movement()
 
+    def cancel_movement(self):
+        """
+        Cancel attempted player move.
+        """
+        if self.sound_delay < pygame.time.get_ticks():
+            self.sound_delay = pygame.time.get_ticks() + 320
+            pygame.mixer.Sound.play(WALL)
+        self.x_change, self.y_change = 0, 0
+        self.movement_end -= PLAYER_SPEED
+
+    def stationary(self):
+        """
+        If no movement, resets player image to stationary.
+        """
+        if self.facing == DOWN and self.y_change == 0:
+            self.image = self.game.character_sheet.get_sprite(0, 0, self.width, self.height)
+            self.animation_loop = 0
+        if self.facing == UP and self.y_change == 0:
+            self.image = self.game.character_sheet.get_sprite(32, 0, self.width, self.height)
+            self.animation_loop = 0
+        if self.facing == LEFT and self.x_change == 0:
+            self.image = self.game.character_sheet.get_sprite(64, 0, self.width, self.height)
+            self.animation_loop = 0
+        if self.facing == RIGHT and self.x_change == 0:
+            self.image = self.game.character_sheet.get_sprite(96, 0, self.width, self.height)
+            self.animation_loop = 0
+
     def move_direction(self):
+        """
+        Detects arrow input and adjusts x/y change variables.
+        If no input, resets player animation to stationary.
+        """
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.x_change -= PLAYER_SPEED
-            self.end += PLAYER_SPEED
+            self.movement_end += PLAYER_SPEED
             self.facing = LEFT
         elif keys[pygame.K_RIGHT]:
             self.x_change += PLAYER_SPEED
-            self.end += PLAYER_SPEED
+            self.movement_end += PLAYER_SPEED
             self.facing = RIGHT
         elif keys[pygame.K_DOWN]:
             self.y_change += PLAYER_SPEED
-            self.end += PLAYER_SPEED
+            self.movement_end += PLAYER_SPEED
             self.facing = DOWN
         elif keys[pygame.K_UP]:
             self.y_change -= PLAYER_SPEED
-            self.end += PLAYER_SPEED
+            self.movement_end += PLAYER_SPEED
             self.facing = UP
-        return False
+        else:
+            self.stationary()
 
-    def collide_block(self, direction):
+    def is_collision(self, direction):
+        """
+        Returns true if collision detected, false otherwise.
+        """
         if direction == 'x':
             self.rect.x += self.x_change
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
             self.rect.x -= self.x_change
             return True if hits else False
-
         if direction == 'y':
             self.rect.y += self.y_change
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
@@ -146,72 +166,104 @@ class Player(pygame.sprite.Sprite):
             return True if hits else False
 
     def animate_movement(self):
+        """
+        Animates player movement.
+        """
         if self.animation_loop == 2:
             self.animation_loop = 0
 
+        self.movement_start += 4
         if self.facing == DOWN:
-            self.rect.y += 4
-            for sprite in self.game.all_sprites:
-                sprite.rect.y -= 4
-            self.start += 4
-            if self.start == 16:
-                self.animation_loop += 1
-                self.image = self.down_animations[self.animation_loop]
-
+            self.move_down()
         elif self.facing == UP:
-            self.rect.y -= 4
-            for sprite in self.game.all_sprites:
-                sprite.rect.y += 4
-            self.start += 4
-            if self.start == 16:
-                self.animation_loop += 1
-                self.image = self.up_animations[self.animation_loop]
-
+            self.move_up()
         elif self.facing == LEFT:
-            self.rect.x -= 4
-            for sprite in self.game.all_sprites:
-                sprite.rect.x += 4
-            self.start += 4
-            if self.start == 16:
-                self.animation_loop += 1
-                self.image = self.left_animations[self.animation_loop]
-
+            self.move_left()
         elif self.facing == RIGHT:
-            self.rect.x += 4
+            self.move_right()
+
+    def center_camera(self, dir, amount):
+        """
+        Adjusts camera to stay centered on player.
+        """
+        if dir == 'x':
             for sprite in self.game.all_sprites:
-                sprite.rect.x -= 4
-            self.start += 4
-            if self.start == 16:
-                self.animation_loop += 1
-                self.image = self.right_animations[self.animation_loop]
+                sprite.rect.x += amount
+        elif dir == 'y':
+            for sprite in self.game.all_sprites:
+                sprite.rect.y += amount
+
+    def move_down(self):
+        """
+        Animates player down movement.
+        """
+        self.rect.y += 4
+        self.center_camera('y', -4)
+        if self.movement_start == 16:
+            self.animation_loop += 1
+            self.image = self.down_animations[self.animation_loop]
+
+    def move_up(self):
+        """
+        Animates player up movement.
+        """
+        self.rect.y -= 4
+        self.center_camera('y', 4)
+        if self.movement_start == 16:
+            self.animation_loop += 1
+            self.image = self.up_animations[self.animation_loop]
+
+    def move_left(self):
+        """
+        Animates player left movement.
+        """
+        self.rect.x -= 4
+        self.center_camera('x', 4)
+        if self.movement_start == 16:
+            self.animation_loop += 1
+            self.image = self.left_animations[self.animation_loop]
+
+    def move_right(self):
+        """
+        Animates player right movement.
+        """
+        self.rect.x += 4
+        self.center_camera('x', -4)
+        if self.movement_start == 16:
+            self.animation_loop += 1
+            self.image = self.right_animations[self.animation_loop]
 
     def check_feet(self):
+        """
+        Looks for items at player coordinate.
+        """
         items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
 
         if self.game.loc.data[self.rel_y//32][self.rel_x//32] in items:
             self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
             self.game.loc.fruit -= 1
 
-    def death(self):
-        # Death sound effect
+    def kill_player(self):
+        """
+        Animate player death.
+        """
         self.image = self.game.character_sheet.get_sprite(128, 0, self.width, self.height)
-        self.game.lives -= 1
         self.game.draw()
-        pygame.time.delay(3000)
+        pygame.time.delay(2000)
+        self.game.player_death()
 
-        self.game.kill_map()
-        self.game.screen.fill(BLACK)
-
-        if self.game.lives == 0:
-            self.game.game_over()
-        else:
-            self.game.load_room(self.game.loc, (len(self.game.loc.data)//2, len(self.game.loc.data[0])//2))
+    def use_door(self, door):
+        if door in self.game.locked_doors:  # Locked door; cannot use
+            return
+        elif door in self.game.unopened_doors:  # Unopened door; remove from unopened_doors
+            self.game.unopened_doors.remove(door)
+        self.game.traverse(door)
 
 
 class NPC(pygame.sprite.Sprite):
     def __init__(self, game):
         self.game = game
-        self.groups = self.game.all_sprites
+        self.groups = self.game.all_sprites, self.game.blocks
         self.animation_loop = 0
         pygame.sprite.Sprite.__init__(self, self.groups)
 
@@ -233,6 +285,15 @@ class ShopKeep(NPC):
         self.rect.y = self.y
 
     def update(self):
+        """
+        Update shopkeeper sprite.
+        """
+        self.animate()
+
+    def animate(self):
+        """
+        Stationary animation for shopkeeper.
+        """
         self.animation_loop += 1
         if self.animation_loop < 40:
             self.image = self.game.npc_sheet.get_sprite(0, 32, self.width, self.height)
@@ -253,16 +314,27 @@ class Enemy(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, self.groups)
 
     def collide_player(self):
-        hits = pygame.sprite.collide_rect(self.game.player, self)
-        if hits:
-            pygame.mixer.Sound.play(DAMAGE)
-            self.game.player.death()
+        """
+        If enemy hits player, kill player.
+        """
+        if self.is_hitting_player():
+            self.game.play_sound(DAMAGE)
+            self.game.player.kill_player()
+
+    def is_hitting_player(self):
+        """
+        Returns true if hit player, false otherwise.
+        """
+        return pygame.sprite.collide_rect(self.game.player, self)
 
     def defeat(self):
+        """
+        Remove enemy from screen.
+        """
         self.kill()
 
 
-class Blue(Enemy):
+class WaddleBug(Enemy):
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
@@ -280,8 +352,8 @@ class Blue(Enemy):
         self.rect.x = self.x
         self.rect.y = self.y
 
-        self.start = 0
-        self.end = 0
+        self.movement_start = 0
+        self.movement_end = 0
         self.speed = 1
         self.type = rd.choice(['HORIZONTAL', 'VERTICAL'])
         if self.type == 'HORIZONTAL':
@@ -314,17 +386,27 @@ class Blue(Enemy):
             self.game.enemy_sheet.get_sprite(96, 96, self.width, self.height)
         ]
 
+        self.animation_frame_1 = 8
+        self.animation_frame_2 = 16
+        self.animation_frame_3 = 24
+
     def update(self):
+        """
+        Update WaddleBug.
+        """
         self.collide_player()
-        if self.start == self.end:
-            self.start, self.end = 0, 0
-            self.end = 32
+        if self.movement_start == self.movement_end:
+            self.movement_start, self.movement_end = 0, 0
+            self.movement_end = TILE_SIZE
             if self.collide_block():  # If no collision, animate movement
                 self.change_direction()
-        elif self.start != self.end:
+        elif self.movement_start != self.movement_end:
             self.animate_movement()
 
     def change_direction(self):
+        """
+        Change WaddleBug walking direction.
+        """
         if self.facing == RIGHT:
             self.facing = LEFT
         elif self.facing == LEFT:
@@ -336,80 +418,97 @@ class Blue(Enemy):
             self.facing = DOWN
 
     def collide_block(self):
+        """
+        Detects if WaddleBug has collided with block.
+        """
         hits = None
         if self.facing == UP:
-            self.rect.y -= self.end
+            self.rect.y -= self.movement_end
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
-            self.rect.y += self.end
+            self.rect.y += self.movement_end
         elif self.facing == DOWN:
-            self.rect.y += self.end
+            self.rect.y += self.movement_end
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
-            self.rect.y -= self.end
+            self.rect.y -= self.movement_end
         elif self.facing == RIGHT:
-            self.rect.x += self.end
+            self.rect.x += self.movement_end
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
-            self.rect.x -= self.end
+            self.rect.x -= self.movement_end
         elif self.facing == LEFT:
-            self.rect.x -= self.end
+            self.rect.x -= self.movement_end
             hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
-            self.rect.x += self.end
+            self.rect.x += self.movement_end
         return True if hits else False
 
     def animate_movement(self):
-
-        animation_frame_1 = 8
-        animation_frame_2 = 16
-        animation_frame_3 = 24
-
+        """
+        Animate WaddleBug movement.
+        """
         if self.facing == DOWN:
-            if self.start < animation_frame_1:
-                self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
-            elif self.start < animation_frame_2:
-                self.image = self.game.enemy_sheet.get_sprite(0, 32, self.width, self.height)
-            elif self.start < animation_frame_3:
-                self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
-            else:
-                self.image = self.game.enemy_sheet.get_sprite(0, 64, self.width, self.height)
-
-            self.rect.y += self.speed
-
+            self.move_down()
         if self.facing == UP:
-            if self.start < animation_frame_1:
-                self.image = self.game.enemy_sheet.get_sprite(32, 0, self.width, self.height)
-            elif self.start < animation_frame_2:
-                self.image = self.game.enemy_sheet.get_sprite(32, 32, self.width, self.height)
-            elif self.start < animation_frame_3:
-                self.image = self.game.enemy_sheet.get_sprite(32, 0, self.width, self.height)
-            else:
-                self.image = self.game.enemy_sheet.get_sprite(32, 64, self.width, self.height)
-
-            self.rect.y -= self.speed
-
+            self.move_up()
         if self.facing == LEFT:
-            if self.start < animation_frame_1:
-                self.image = self.game.enemy_sheet.get_sprite(64, 0, self.width, self.height)
-            elif self.start < animation_frame_2:
-                self.image = self.game.enemy_sheet.get_sprite(64, 32, self.width, self.height)
-            elif self.start < animation_frame_3:
-                self.image = self.game.enemy_sheet.get_sprite(64, 0, self.width, self.height)
-            else:
-                self.image = self.game.enemy_sheet.get_sprite(64, 64, self.width, self.height)
-
-            self.rect.x -= self.speed
-
+            self.move_left()
         if self.facing == RIGHT:
-            if self.start < animation_frame_1:
-                self.image = self.game.enemy_sheet.get_sprite(96, 0, self.width, self.height)
-            elif self.start < animation_frame_2:
-                self.image = self.game.enemy_sheet.get_sprite(96, 32, self.width, self.height)
-            elif self.start < animation_frame_3:
-                self.image = self.game.enemy_sheet.get_sprite(96, 0, self.width, self.height)
-            else:
-                self.image = self.game.enemy_sheet.get_sprite(96, 64, self.width, self.height)
+            self.move_right()
+        self.movement_start += self.speed
 
-            self.rect.x += self.speed
+    def move_down(self):
+        """
+        Move WaddleBug down
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(0, 32, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(0, 0, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(0, 64, self.width, self.height)
+        self.rect.y += self.speed
 
-        self.start += self.speed
+    def move_up(self):
+        """
+        Move WaddleBug up
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(32, 0, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(32, 32, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(32, 0, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(32, 64, self.width, self.height)
+        self.rect.y -= self.speed
+
+    def move_left(self):
+        """
+        Move WaddleBug left
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(64, 0, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(64, 32, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(64, 0, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(64, 64, self.width, self.height)
+        self.rect.x -= self.speed
+
+    def move_right(self):
+        """
+        Move WaddleBug right
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(96, 0, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(96, 32, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(96, 0, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(96, 64, self.width, self.height)
+        self.rect.x += self.speed
 
 
 class Block(pygame.sprite.Sprite):
@@ -433,7 +532,7 @@ class Block(pygame.sprite.Sprite):
 
 
 class Ground(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, type):
+    def __init__(self, game, x, y):
         self.game = game
         self._layer = GROUND_LAYER
         self.groups = self.game.all_sprites
@@ -444,7 +543,7 @@ class Ground(pygame.sprite.Sprite):
         self.width = TILE_SIZE
         self.height = TILE_SIZE
 
-        self.image = self.game.terrain_sheet.get_sprite(type * TILE_SIZE, 0, self.width, self.height)
+        self.image = self.game.terrain_sheet.get_sprite(0, 0, self.width, self.height)
         self.image.set_colorkey(NASTY_GREEN)
 
         self.rect = self.image.get_rect()
@@ -478,40 +577,22 @@ class Door(pygame.sprite.Sprite):
         self.rect.y = self.y
 
     def update(self):
-        self.use_door()
+        """
+        Update door
+        """
+        if self.is_hitting_player():
+            self.game.player.use_door(self.number)
 
-    def use_door(self):
-        hits = pygame.sprite.collide_rect(self.game.player, self)
-        if hits:
-            if self.number not in self.game.used_doors:
-                self.game.used_doors.append(self.number)
-
-            if self.number in self.game.locked_doors:           # Locked door; cannot use
-                return
-            elif self.number in self.game.unopened_doors:       # Unopened door; remove from unopened_doors
-                self.game.unopened_doors.remove(self.number)
-
-            self.game.player.rel_x, self.game.player.rel_y = 0, 0
-            self.game.kill_map()
-            self.game.screen.fill(BLACK)
-
-            node = self.game.loc.bridges[self.number].room
-
-            if node.num not in self.game.visited:   # New depth
-                self.game.depth += 1
-                node = level.generate_next_maps(self.game, node)
-                self.game.visited.append(node.num)
-            elif node.num in self.game.visited and self.game.loc.num < node.num:    # Depth reachieved
-                self.game.depth += 1
-            else:   # Backtracking
-                self.game.depth -= 1
-
-            pygame.mixer.Sound.play(DOOR)
-            player = self.game.loc.bridges[self.number].spawn
-            self.game.player.movement_delay = pygame.time.get_ticks() + 2000
-            self.game.load_room(node, player)
+    def is_hitting_player(self):
+        """
+        Returns true if hitting player, else false.
+        """
+        return pygame.sprite.collide_rect(self.game.player, self)
 
     def unlock(self):
+        """
+        Unlock door
+        """
         self.game.loc.cleared = True
         if self.game.loc.num != 0:
             self.game.locked_doors.remove(self.number)
@@ -521,7 +602,7 @@ class Door(pygame.sprite.Sprite):
         else:
             self.image = self.game.door_sheet.get_sprite(32, 0, self.width, self.height)
 
-        pygame.mixer.Sound.play(CLEAR)
+        self.game.play_sound(CLEAR)
 
 
 class Item(pygame.sprite.Sprite):
