@@ -682,7 +682,7 @@ class WaitWatch(Enemy):
         self.width = TILE_SIZE
         self.height = TILE_SIZE
 
-        self.image = self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height)
+        self.image = self.game.enemy_sheet.get_sprite(0, 160, self.width, self.height)
         self.image.set_colorkey(NASTY_GREEN)
 
         self.rect = self.image.get_rect()
@@ -691,39 +691,57 @@ class WaitWatch(Enemy):
 
         self.movement_start = 0
         self.movement_end = 0
-        self.speed = 2
+        self.speed = 1
         self.facing = DOWN
         self.watching = False
 
         self.down_animations = [
-            self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(0, 128, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 160, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 192, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 224, self.width, self.height),
         ]
         self.up_animations = [
-            self.game.enemy_sheet.get_sprite(32, 96, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(32, 128, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 160, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 192, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 224, self.width, self.height),
         ]
         self.left_animations = [
-            self.game.enemy_sheet.get_sprite(64, 96, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(64, 128, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 160, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 192, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 224, self.width, self.height),
         ]
         self.right_animations = [
-            self.game.enemy_sheet.get_sprite(96, 96, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(96, 128, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 160, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 192, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 224, self.width, self.height),
         ]
+        self.evil_face = self.game.enemy_sheet.get_sprite(32, 256, self.width, self.height)
 
+        self.animation_frame = 16
         self.directions = [DOWN, UP, LEFT, RIGHT]
 
     def update(self):
         """
-        Update GrimLeaper.
+        Update WaitWatch
         """
         self.collide_player()
+        if self.in_eyeshot():
+            self.image = self.evil_face
+            return
+
         if int(self.movement_start) == self.movement_end and self.movement_delay < pygame.time.get_ticks():
-            self.movement_start, self.movement_end, self.movement_delay = 0, 64, 0
+            self.movement_start, self.movement_end, self.movement_delay = 0, 32, 0
             self.change_direction()
+
             if self.collide_block():  # If no collision, animate movement
                 self.movement_start, self.movement_end, self.movement_delay = 0, 0, 0
+
+            seed = int(rd.random() * 100)
+            if seed > 50:
+                self.movement_start, self.movement_end = 0, 0
+                self.movement_delay = pygame.time.get_ticks() + 3000
+                self.stationary()
+
         elif self.movement_start != self.movement_end:
             self.watching = False
             self.animate_movement()
@@ -743,13 +761,13 @@ class WaitWatch(Enemy):
         Resets GrimLeaper's sprite to stationary
         """
         if self.facing == DOWN:
-            self.image = self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height)
+            self.image = self.game.enemy_sheet.get_sprite(0, 160, self.width, self.height)
         elif self.facing == UP:
-            self.image = self.game.enemy_sheet.get_sprite(32, 96, self.width, self.height)
+            self.image = self.game.enemy_sheet.get_sprite(32, 160, self.width, self.height)
         elif self.facing == LEFT:
-            self.image = self.game.enemy_sheet.get_sprite(64, 96, self.width, self.height)
+            self.image = self.game.enemy_sheet.get_sprite(64, 160, self.width, self.height)
         elif self.facing == RIGHT:
-            self.image = self.game.enemy_sheet.get_sprite(96, 96, self.width, self.height)
+            self.image = self.game.enemy_sheet.get_sprite(96, 160, self.width, self.height)
         self.watching = True
 
     def is_watching(self):
@@ -762,21 +780,24 @@ class WaitWatch(Enemy):
         hits = None
         if self.facing == UP:
             self.rect.y -= self.movement_end
-            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            hits = self.collision(self.game.blocks)
             self.rect.y += self.movement_end
         elif self.facing == DOWN:
             self.rect.y += self.movement_end
-            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            hits = self.collision(self.game.blocks)
             self.rect.y -= self.movement_end
         elif self.facing == RIGHT:
             self.rect.x += self.movement_end
-            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            hits = self.collision(self.game.blocks)
             self.rect.x -= self.movement_end
         elif self.facing == LEFT:
             self.rect.x -= self.movement_end
-            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            hits = self.collision(self.game.blocks)
             self.rect.x += self.movement_end
         return True if hits else False
+
+    def collision(self, object):
+        return pygame.sprite.spritecollide(self, object, False)
 
     def animate_movement(self):
         """
@@ -794,36 +815,70 @@ class WaitWatch(Enemy):
 
     def move_down(self):
         """
-        Move GrimLeaper down
+        Move WaddleBug down
         """
-        if self.movement_start == 0:
-            self.image = self.game.enemy_sheet.get_sprite(0, 128, self.width, self.height)
-
+        if self.movement_start < self.animation_frame:
+            self.image = self.game.enemy_sheet.get_sprite(0, 192, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(0, 224, self.width, self.height)
         self.rect.y += self.speed
 
     def move_up(self):
         """
-        Move GrimLeaper up
+        Move WaddleBug up
         """
-        if self.movement_start == 0:
-            self.image = self.game.enemy_sheet.get_sprite(32, 128, self.width, self.height)
+        if self.movement_start < self.animation_frame:
+            self.image = self.game.enemy_sheet.get_sprite(32, 192, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(32, 224, self.width, self.height)
         self.rect.y -= self.speed
 
     def move_left(self):
         """
-        Move GrimLeaper left
+        Move WaddleBug left
         """
-        if self.movement_start == 0:
-            self.image = self.game.enemy_sheet.get_sprite(64, 128, self.width, self.height)
+        if self.movement_start < self.animation_frame:
+            self.image = self.game.enemy_sheet.get_sprite(64, 192, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(64, 224, self.width, self.height)
         self.rect.x -= self.speed
 
     def move_right(self):
         """
-        Move GrimLeaper right
+        Move WaddleBug right
         """
-        if self.movement_start == 0:
-            self.image = self.game.enemy_sheet.get_sprite(96, 128, self.width, self.height)
+        if self.movement_start < self.animation_frame:
+            self.image = self.game.enemy_sheet.get_sprite(96, 192, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(96, 224, self.width, self.height)
         self.rect.x += self.speed
+
+    def in_eyeshot(self):
+        if self.watching:
+            if self.facing == DOWN:
+                return self.look_for_player('y', 32)
+            elif self.facing == UP:
+                return self.look_for_player('y', -32)
+            elif self.facing == LEFT:
+                return self.look_for_player('x', -32)
+            elif self.facing == RIGHT:
+                return self.look_for_player('x', 32)
+        return False
+
+    def look_for_player(self, direction, amount):
+        if direction == 'x':
+            for tile in range(1, 6):
+                self.rect.x += tile * amount
+                if self.is_hitting_player():
+                    return True
+                self.rect.x -= tile * amount
+        if direction == 'y':
+            for tile in range(1, 6):
+                self.rect.y += tile * amount
+                if self.is_hitting_player():
+                    return True
+                self.rect.y -= tile * amount
+        return False
 
 
 class Block(pygame.sprite.Sprite):
