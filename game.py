@@ -56,7 +56,7 @@ class Game:
                            'B': Block,
                            'S': ShopKeep,
                            'Eb': WaddleBug,
-                           'Ep': None,
+                           'Ep': GrimLeaper,
                            'Ew': None,
                            'Ef': None,
                            'Eg': None,

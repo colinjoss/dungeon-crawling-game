@@ -511,6 +511,321 @@ class WaddleBug(Enemy):
         self.rect.x += self.speed
 
 
+class GrimLeaper(Enemy):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = PLAYER_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+        self.movement_start = 0
+        self.movement_end = 0
+        self.speed = 2
+        self.facing = DOWN
+        self.jump_cycle = 32
+
+        self.down_animations = [
+            self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 128, self.width, self.height),
+        ]
+        self.up_animations = [
+            self.game.enemy_sheet.get_sprite(32, 96, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 128, self.width, self.height),
+        ]
+        self.left_animations = [
+            self.game.enemy_sheet.get_sprite(64, 96, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 128, self.width, self.height),
+        ]
+        self.right_animations = [
+            self.game.enemy_sheet.get_sprite(96, 96, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 128, self.width, self.height),
+        ]
+
+        self.directions = [DOWN, UP, LEFT, RIGHT]
+
+    def update(self):
+        """
+        Update GrimLeaper.
+        """
+        self.collide_player()
+        if int(self.movement_start) == self.movement_end and self.movement_delay < pygame.time.get_ticks():
+            self.movement_start, self.movement_end, self.movement_delay = 0, 64, 0
+            self.change_direction()
+            if self.collide_block():  # If no collision, animate movement
+                self.movement_start, self.movement_end, self.movement_delay = 0, 0, 0
+        elif self.movement_start != self.movement_end:
+            self.animate_movement()
+            if self.movement_start == self.movement_end:
+                self.movement_delay = pygame.time.get_ticks() + 1000
+                self.stationary()
+
+    def change_direction(self):
+        """
+        Randomly select a new direction for GrimLeaper
+        """
+        i = int(rd.random() * len(self.directions))
+        self.facing = self.directions[i]
+
+    def stationary(self):
+        """
+        Resets GrimLeaper's sprite to stationary
+        """
+        if self.facing == DOWN:
+            self.image = self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height)
+        elif self.facing == UP:
+            self.image = self.game.enemy_sheet.get_sprite(32, 96, self.width, self.height)
+        elif self.facing == LEFT:
+            self.image = self.game.enemy_sheet.get_sprite(64, 96, self.width, self.height)
+        elif self.facing == RIGHT:
+            self.image = self.game.enemy_sheet.get_sprite(96, 96, self.width, self.height)
+
+    def collide_block(self):
+        """
+        Detects if GrimLeaper has collided with block.
+        """
+        hits = None
+        if self.facing == UP:
+            self.rect.y -= self.movement_end
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            self.rect.y += self.movement_end
+        elif self.facing == DOWN:
+            self.rect.y += self.movement_end
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            self.rect.y -= self.movement_end
+        elif self.facing == RIGHT:
+            self.rect.x += self.movement_end
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            self.rect.x -= self.movement_end
+        elif self.facing == LEFT:
+            self.rect.x -= self.movement_end
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            self.rect.x += self.movement_end
+        return True if hits else False
+
+    def animate_movement(self):
+        """
+        Animate GrimLeaper movement.
+        """
+        if self.facing == DOWN:
+            self.move_down()
+        if self.facing == UP:
+            self.move_up()
+        if self.facing == LEFT:
+            self.move_left()
+        if self.facing == RIGHT:
+            self.move_right()
+        self.movement_start += self.speed
+
+    def move_down(self):
+        """
+        Move GrimLeaper down
+        """
+        if self.movement_start == 0:
+            self.image = self.game.enemy_sheet.get_sprite(0, 128, self.width, self.height)
+
+        self.rect.y += self.speed
+
+    def move_up(self):
+        """
+        Move GrimLeaper up
+        """
+        if self.movement_start == 0:
+            self.image = self.game.enemy_sheet.get_sprite(32, 128, self.width, self.height)
+        self.rect.y -= self.speed
+
+    def move_left(self):
+        """
+        Move GrimLeaper left
+        """
+        if self.movement_start == 0:
+            self.image = self.game.enemy_sheet.get_sprite(64, 128, self.width, self.height)
+
+        if self.movement_start < self.jump_cycle:  # 32
+            self.rect.y -= 1
+        else:  # 64
+            self.rect.y += 1
+        self.rect.x -= self.speed
+
+    def move_right(self):
+        """
+        Move GrimLeaper right
+        """
+        if self.movement_start == 0:
+            self.image = self.game.enemy_sheet.get_sprite(96, 128, self.width, self.height)
+
+        if self.movement_start < self.jump_cycle:  # 32
+            self.rect.y -= 1
+        else:  # 64
+            self.rect.y += 1
+        self.rect.x += self.speed
+
+
+class WaitWatch(Enemy):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = PLAYER_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+        self.movement_start = 0
+        self.movement_end = 0
+        self.speed = 2
+        self.facing = DOWN
+        self.watching = False
+
+        self.down_animations = [
+            self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 128, self.width, self.height),
+        ]
+        self.up_animations = [
+            self.game.enemy_sheet.get_sprite(32, 96, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 128, self.width, self.height),
+        ]
+        self.left_animations = [
+            self.game.enemy_sheet.get_sprite(64, 96, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 128, self.width, self.height),
+        ]
+        self.right_animations = [
+            self.game.enemy_sheet.get_sprite(96, 96, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 128, self.width, self.height),
+        ]
+
+        self.directions = [DOWN, UP, LEFT, RIGHT]
+
+    def update(self):
+        """
+        Update GrimLeaper.
+        """
+        self.collide_player()
+        if int(self.movement_start) == self.movement_end and self.movement_delay < pygame.time.get_ticks():
+            self.movement_start, self.movement_end, self.movement_delay = 0, 64, 0
+            self.change_direction()
+            if self.collide_block():  # If no collision, animate movement
+                self.movement_start, self.movement_end, self.movement_delay = 0, 0, 0
+        elif self.movement_start != self.movement_end:
+            self.watching = False
+            self.animate_movement()
+            if self.movement_start == self.movement_end:
+                self.movement_delay = pygame.time.get_ticks() + 3000
+                self.stationary()
+
+    def change_direction(self):
+        """
+        Randomly select a new direction for GrimLeaper
+        """
+        i = int(rd.random() * len(self.directions))
+        self.facing = self.directions[i]
+
+    def stationary(self):
+        """
+        Resets GrimLeaper's sprite to stationary
+        """
+        if self.facing == DOWN:
+            self.image = self.game.enemy_sheet.get_sprite(0, 96, self.width, self.height)
+        elif self.facing == UP:
+            self.image = self.game.enemy_sheet.get_sprite(32, 96, self.width, self.height)
+        elif self.facing == LEFT:
+            self.image = self.game.enemy_sheet.get_sprite(64, 96, self.width, self.height)
+        elif self.facing == RIGHT:
+            self.image = self.game.enemy_sheet.get_sprite(96, 96, self.width, self.height)
+        self.watching = True
+
+    def is_watching(self):
+        return self.watching
+
+    def collide_block(self):
+        """
+        Detects if GrimLeaper has collided with block.
+        """
+        hits = None
+        if self.facing == UP:
+            self.rect.y -= self.movement_end
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            self.rect.y += self.movement_end
+        elif self.facing == DOWN:
+            self.rect.y += self.movement_end
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            self.rect.y -= self.movement_end
+        elif self.facing == RIGHT:
+            self.rect.x += self.movement_end
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            self.rect.x -= self.movement_end
+        elif self.facing == LEFT:
+            self.rect.x -= self.movement_end
+            hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
+            self.rect.x += self.movement_end
+        return True if hits else False
+
+    def animate_movement(self):
+        """
+        Animate GrimLeaper movement.
+        """
+        if self.facing == DOWN:
+            self.move_down()
+        if self.facing == UP:
+            self.move_up()
+        if self.facing == LEFT:
+            self.move_left()
+        if self.facing == RIGHT:
+            self.move_right()
+        self.movement_start += self.speed
+
+    def move_down(self):
+        """
+        Move GrimLeaper down
+        """
+        if self.movement_start == 0:
+            self.image = self.game.enemy_sheet.get_sprite(0, 128, self.width, self.height)
+
+        self.rect.y += self.speed
+
+    def move_up(self):
+        """
+        Move GrimLeaper up
+        """
+        if self.movement_start == 0:
+            self.image = self.game.enemy_sheet.get_sprite(32, 128, self.width, self.height)
+        self.rect.y -= self.speed
+
+    def move_left(self):
+        """
+        Move GrimLeaper left
+        """
+        if self.movement_start == 0:
+            self.image = self.game.enemy_sheet.get_sprite(64, 128, self.width, self.height)
+        self.rect.x -= self.speed
+
+    def move_right(self):
+        """
+        Move GrimLeaper right
+        """
+        if self.movement_start == 0:
+            self.image = self.game.enemy_sheet.get_sprite(96, 128, self.width, self.height)
+        self.rect.x += self.speed
+
+
 class Block(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
