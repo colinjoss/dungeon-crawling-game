@@ -31,6 +31,7 @@ class Game:
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.all_doors = pygame.sprite.LayeredUpdates()
         self.all_enemies = pygame.sprite.LayeredUpdates()
+        self.friend_eater = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.doors = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
@@ -58,9 +59,9 @@ class Game:
                            'Ewb': WaddleBug,
                            'Egl': GrimLeaper,
                            'Eww': WaitWatch,
-                           'Efe': None,
+                           'Efe': FriendEater,
                            'Egf': None,
-                           'Ezm': None,
+                           'Ezm': ZipperMouth,
                            'Ch': Cherry,
                            'Ba': Banana,
                            'Me': Melon,

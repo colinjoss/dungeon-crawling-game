@@ -20,11 +20,12 @@ class MapNode:
     """
     Represents an individual dungeon room.
     """
-    def __init__(self, num, data, dimensions, fruit):
+    def __init__(self, num, data, dimensions, fruit, fruit_coords):
         self.num = num
         self.data = data
         self.dimensions = dimensions
         self.fruit = fruit
+        self.fruit_coords = fruit_coords
         self.bridges = {}
         self.cleared = False
         
@@ -191,11 +192,12 @@ def new_map(game, dimensions, empty):
 
     if empty:
         fruit = 0
+        fruit_coords = []
     else:
-        fruit = place_items(data, dimensions[0], dimensions[1], game)
+        fruit, fruit_coords = place_items(data, dimensions[0], dimensions[1], game)
         place_enemies(data, dimensions[0], dimensions[1])
 
-    return MapNode(next(room_count), data, dimensions, fruit)
+    return MapNode(next(room_count), data, dimensions, fruit, fruit_coords)
 
 
 def create_first_node(game):
@@ -277,13 +279,15 @@ def place_items(data, rows, columns, game):
     """
     n = get_total_items()
     items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
+    coords = []
     count = 0
     while count < n:
         r, c = math.floor(rd.random() * (rows - 28)), math.floor(rd.random() * (columns - 28))
         if data[r + 14][c + 14] == '.':
             data[r + 14][c + 14] = items[math.floor(rd.random() * 6)]
             count += 1
-    return count
+            coords.append((r+14, c+14))
+    return count, coords
 
 
 def get_total_items():
@@ -297,7 +301,7 @@ def place_enemies(matrix, rows, columns):
     """
     Randomly places enemies in the dungeon room.
     """
-    enemies = ['Eww']
+    enemies = ['Ezm']
     n = get_total_enemies()
     for i in range(0, n):
         r = math.floor(rd.random() * (rows - 24))

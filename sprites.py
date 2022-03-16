@@ -242,6 +242,7 @@ class Player(pygame.sprite.Sprite):
         if self.game.loc.data[self.rel_y//32][self.rel_x//32] in items:
             self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
             self.game.loc.fruit -= 1
+            self.game.loc.fruit_coords.remove((self.rel_y//32, self.rel_x//32))
 
     def kill_player(self):
         """
@@ -881,6 +882,425 @@ class WaitWatch(Enemy):
         return False
 
 
+class FriendEater(Enemy):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = PLAYER_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.rel_x = self.x
+        self.rel_y = self.y
+
+        self.image = self.game.enemy_sheet.get_sprite(0, 160, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+        self.movement_start = 0
+        self.movement_end = 0
+        self.speed = 1
+        self.facing = DOWN
+
+        self.down_animations = [
+            self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 320, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 352, self.width, self.height),
+        ]
+        self.up_animations = [
+            self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 320, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 352, self.width, self.height),
+        ]
+        self.left_animations = [
+            self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 320, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 352, self.width, self.height),
+        ]
+        self.right_animations = [
+            self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 320, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 352, self.width, self.height),
+        ]
+
+        self.animation_frame_1 = 8
+        self.animation_frame_2 = 16
+        self.animation_frame_3 = 24
+        self.directions = [DOWN, UP, LEFT, RIGHT]
+
+    def update(self):
+        """
+        Update FriendEater
+        """
+        self.collide_player()
+        if self.movement_start == self.movement_end and self.movement_delay < pygame.time.get_ticks():
+            self.movement_start, self.movement_end, self.movement_delay = 0, 32, 0
+            if self.collide_block():  # If no collision, animate movement
+                self.movement_start, self.movement_end, self.movement_delay = 0, 0, 0
+        elif self.movement_start != self.movement_end:
+            self.animate_movement()
+            if self.movement_start == self.movement_end:
+                self.update_relative_pos()
+                self.movement_delay = pygame.time.get_ticks() + 1000
+                self.stationary()
+                self.change_direction()
+
+    def change_direction(self):
+        """
+        Randomly select a new direction for FriendEater
+        """
+        i = int(rd.random() * len(self.directions))
+        self.facing = self.directions[i]
+
+    def collide_block(self):
+        """
+        Detects if FriendEater has collided with block.
+        """
+        hits = None
+        if self.facing == UP:
+            self.rect.y -= self.movement_end
+            hits = self.collision(self.game.blocks)
+            self.rect.y += self.movement_end
+        elif self.facing == DOWN:
+            self.rect.y += self.movement_end
+            hits = self.collision(self.game.blocks)
+            self.rect.y -= self.movement_end
+        elif self.facing == RIGHT:
+            self.rect.x += self.movement_end
+            hits = self.collision(self.game.blocks)
+            self.rect.x -= self.movement_end
+        elif self.facing == LEFT:
+            self.rect.x -= self.movement_end
+            hits = self.collision(self.game.blocks)
+            self.rect.x += self.movement_end
+        return True if hits else False
+
+    def collision(self, object):
+        return pygame.sprite.spritecollide(self, object, False)
+
+    def animate_movement(self):
+        """
+        Animate FriendEater movement.
+        """
+        if self.facing == DOWN:
+            self.move_down()
+        if self.facing == UP:
+            self.move_up()
+        if self.facing == LEFT:
+            self.move_left()
+        if self.facing == RIGHT:
+            self.move_right()
+        self.movement_start += self.speed
+
+    def stationary(self):
+        """
+        Resets FriendEater's sprite to stationary
+        """
+        if self.facing == DOWN:
+            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+        elif self.facing == UP:
+            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+        elif self.facing == LEFT:
+            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+        elif self.facing == RIGHT:
+            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+
+    def move_down(self):
+        """
+        Move FriendEater down
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(0, 320, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(0, 352, self.width, self.height)
+        self.rect.y += self.speed
+
+    def move_up(self):
+        """
+        Move FriendEater up
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(32, 320, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(32, 352, self.width, self.height)
+        self.rect.y -= self.speed
+
+    def move_left(self):
+        """
+        Move FriendEater left
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(64, 320, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(64, 352, self.width, self.height)
+        self.rect.x -= self.speed
+
+    def move_right(self):
+        """
+        Move FriendEater right
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(96, 320, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(96, 352, self.width, self.height)
+
+        self.rect.x += self.speed
+
+    def update_relative_pos(self):
+        """
+        Updates FriendEater's relative position.
+        """
+        if self.facing == UP:
+            self.rel_y -= 32
+        elif self.facing == DOWN:
+            self.rel_y += 32
+        elif self.facing == RIGHT:
+            self.rel_x += 32
+        elif self.facing == LEFT:
+            self.rel_x -= 32
+
+
+class ZipperMouth(Enemy):
+    def __init__(self, game, x, y):
+        super().__init__(game)
+        self._layer = PLAYER_LAYER
+        self.groups = self.game.all_sprites
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.rel_x = self.x
+        self.rel_y = self.y
+
+        self.image = self.game.enemy_sheet.get_sprite(0, 160, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+        self.movement_start = 0
+        self.movement_end = 0
+        self.speed = 1
+        self.facing = DOWN
+
+        self.down_animations = [
+            self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 320, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 352, self.width, self.height),
+        ]
+        self.up_animations = [
+            self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 320, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 352, self.width, self.height),
+        ]
+        self.left_animations = [
+            self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 320, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 352, self.width, self.height),
+        ]
+        self.right_animations = [
+            self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 320, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 352, self.width, self.height),
+        ]
+
+        self.animation_frame_1 = 8
+        self.animation_frame_2 = 16
+        self.animation_frame_3 = 24
+        self.directions = [DOWN, UP, LEFT, RIGHT]
+
+        self.target = self.get_player_location()
+
+    def update(self):
+        """
+        Update FriendEater
+        """
+        self.collide_player()
+        if self.movement_start == self.movement_end and self.movement_delay < pygame.time.get_ticks():
+            self.movement_start, self.movement_end, self.movement_delay = 0, 32, 0
+            if self.collide_block():  # If no collision, animate movement
+                self.movement_start, self.movement_end, self.movement_delay = 0, 0, 0
+        elif self.movement_start != self.movement_end:
+            self.animate_movement()
+            if self.movement_start == self.movement_end:
+                self.update_relative_pos()
+                self.movement_delay = pygame.time.get_ticks() + 1000
+                self.stationary()
+                self.target = self.get_player_location()
+                self.facing = self.get_next_direction()
+
+    def change_direction(self):
+        """
+        Randomly select a new direction for FriendEater
+        """
+        i = int(rd.random() * len(self.directions))
+        self.facing = self.directions[i]
+
+    def collide_block(self):
+        """
+        Detects if FriendEater has collided with block.
+        """
+        hits = None
+        if self.facing == UP:
+            self.rect.y -= self.movement_end
+            hits = self.collision(self.game.blocks)
+            self.rect.y += self.movement_end
+        elif self.facing == DOWN:
+            self.rect.y += self.movement_end
+            hits = self.collision(self.game.blocks)
+            self.rect.y -= self.movement_end
+        elif self.facing == RIGHT:
+            self.rect.x += self.movement_end
+            hits = self.collision(self.game.blocks)
+            self.rect.x -= self.movement_end
+        elif self.facing == LEFT:
+            self.rect.x -= self.movement_end
+            hits = self.collision(self.game.blocks)
+            self.rect.x += self.movement_end
+        return True if hits else False
+
+    def collision(self, object):
+        return pygame.sprite.spritecollide(self, object, False)
+
+    def animate_movement(self):
+        """
+        Animate FriendEater movement.
+        """
+        if self.facing == DOWN:
+            self.move_down()
+        if self.facing == UP:
+            self.move_up()
+        if self.facing == LEFT:
+            self.move_left()
+        if self.facing == RIGHT:
+            self.move_right()
+        self.movement_start += self.speed
+
+    def stationary(self):
+        """
+        Resets FriendEater's sprite to stationary
+        """
+        if self.facing == DOWN:
+            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+        elif self.facing == UP:
+            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+        elif self.facing == LEFT:
+            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+        elif self.facing == RIGHT:
+            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+
+    def move_down(self):
+        """
+        Move FriendEater down
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(0, 320, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(0, 352, self.width, self.height)
+        self.rect.y += self.speed
+
+    def move_up(self):
+        """
+        Move FriendEater up
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(32, 320, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(32, 352, self.width, self.height)
+        self.rect.y -= self.speed
+
+    def move_left(self):
+        """
+        Move FriendEater left
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(64, 320, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(64, 352, self.width, self.height)
+        self.rect.x -= self.speed
+
+    def move_right(self):
+        """
+        Move FriendEater right
+        """
+        if self.movement_start < self.animation_frame_1:
+            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+        elif self.movement_start < self.animation_frame_2:
+            self.image = self.game.enemy_sheet.get_sprite(96, 320, self.width, self.height)
+        elif self.movement_start < self.animation_frame_3:
+            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+        else:
+            self.image = self.game.enemy_sheet.get_sprite(96, 352, self.width, self.height)
+
+        self.rect.x += self.speed
+
+    def update_relative_pos(self):
+        """
+        Updates FriendEater's relative position.
+        """
+        if self.facing == UP:
+            self.rel_y -= 32
+        elif self.facing == DOWN:
+            self.rel_y += 32
+        elif self.facing == RIGHT:
+            self.rel_x += 32
+        elif self.facing == LEFT:
+            self.rel_x -= 32
+
+    def get_player_location(self):
+        return self.game.player.rel_y // 32, self.game.player.rel_x // 32
+
+    def get_next_direction(self):
+        curr = self.rel_y // 32, self.rel_x // 32
+        possible = []
+        if self.target[0] > curr[0]:
+            possible.append(DOWN)
+        elif self.target[0] < curr[0]:
+            possible.append(UP)
+        if self.target[1] > curr[1]:
+            possible.append(RIGHT)
+        elif self.target[1] < curr[1]:
+            possible.append(LEFT)
+        return rd.choice(possible)
+
+
 class Block(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
@@ -914,6 +1334,33 @@ class Ground(pygame.sprite.Sprite):
         self.height = TILE_SIZE
 
         self.image = self.game.terrain_sheet.get_sprite(0, 0, self.width, self.height)
+        self.image.set_colorkey(NASTY_GREEN)
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+    # def update(self):
+    #     if self.is_poisoned():
+    #         self.image = self.game.terrain_sheet.get_sprite(32, 0, self.width, self.height)
+    #
+    # def is_poisoned(self):
+    #     return pygame.sprite.collide_circle(self, self.game.friend_eater)
+
+
+class Poison(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = GROUND_LAYER
+        self.groups = self.game.all_sprites
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TILE_SIZE
+        self.y = y * TILE_SIZE
+        self.width = TILE_SIZE
+        self.height = TILE_SIZE
+
+        self.image = self.game.terrain_sheet.get_sprite(32, 0, self.width, self.height)
         self.image.set_colorkey(NASTY_GREEN)
 
         self.rect = self.image.get_rect()
@@ -978,13 +1425,13 @@ class Door(pygame.sprite.Sprite):
 class Item(pygame.sprite.Sprite):
     def __init__(self, game):
         self.game = game
-        self.groups = self.game.all_sprites
+        self.groups = self.game.all_sprites, self.game.friend_eater
         pygame.sprite.Sprite.__init__(self, self.groups)
 
     def update(self):
-        self.use_item()
+        self.eat()
 
-    def use_item(self):
+    def eat(self):
         hits = pygame.sprite.collide_rect(self.game.player, self)
         if hits:
             pygame.mixer.Sound.play(EAT)
