@@ -183,7 +183,7 @@ class Game:
             sprite.rect.y -= player[0] * TILE_SIZE
             sprite.rect.y += 6 * TILE_SIZE
 
-    def button_events(self):
+    def keyboard_events(self):
         """
         Handles non-movement keyboard events.
         """
@@ -191,6 +191,49 @@ class Game:
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
+
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_z]:
+                self.player.check_facing_tile()
+
+    def interact_shop(self):
+        menus = self.import_shop_menus()
+        i = 0
+        shop_open = True
+        while shop_open:
+            self.screen.blit(menus[i], (208, 112))
+            for event in pygame.event.get():
+                i = self.update_shop_menu(event, i)
+            if i < 0:
+                shop_open = False
+            pygame.display.update()
+
+    def update_shop_menu(self, event, i):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:  # Up arrow
+                self.play_sound(CHANGE_OPTION)
+                if i == 0:
+                    return 0
+                return i - 1
+            if event.key == pygame.K_DOWN:  # Down arrow
+                self.play_sound(CHANGE_OPTION)
+                if i == 2:
+                    return 2
+                return i + 1
+            if event.key == pygame.K_x:
+                return -1
+            if event.key == pygame.K_z:
+                pass
+        return i
+
+    def import_shop_menus(self):
+        menu_1 = pygame.image.load('img/shop_menu_1.png')
+        menu_1.set_colorkey(NASTY_GREEN)
+        menu_2 = pygame.image.load('img/shop_menu_2.png')
+        menu_2.set_colorkey(NASTY_GREEN)
+        menu_3 = pygame.image.load('img/shop_menu_3.png')
+        menu_3.set_colorkey(NASTY_GREEN)
+        return [menu_1, menu_2, menu_3]
 
     def kill_map(self):
         """
@@ -294,7 +337,7 @@ class Game:
         Main game loop.
         """
         while self.playing:
-            self.button_events()
+            self.keyboard_events()
             self.update()
             self.draw()
 

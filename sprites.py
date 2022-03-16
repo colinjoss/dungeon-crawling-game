@@ -244,6 +244,21 @@ class Player(pygame.sprite.Sprite):
             self.game.loc.fruit -= 1
             self.game.loc.fruit_coords.remove((self.rel_y//32, self.rel_x//32))
 
+    def check_facing_tile(self):
+        tile = self.get_facing_tile()
+        if self.game.loc.data[tile[0]//32][tile[1]//32] == 'S':
+            self.game.interact_shop()
+
+    def get_facing_tile(self):
+        if self.facing == UP:
+            return self.rel_y - 32, self.rel_x
+        elif self.facing == DOWN:
+            return self.rel_y + 32, self.rel_x
+        elif self.facing == RIGHT:
+            return self.rel_y, self.rel_x + 32
+        elif self.facing == LEFT:
+            return self.rel_y, self.rel_x - 32
+
     def kill_player(self):
         """
         Animate player death.
