@@ -327,6 +327,7 @@ class Enemy(pygame.sprite.Sprite):
         self.y_change = 0
         self.animation_loop = 0
         self.movement_delay = 0
+        print('hehehehehe')
         pygame.sprite.Sprite.__init__(self, self.groups)
 
     def collide_player(self):
@@ -348,13 +349,13 @@ class Enemy(pygame.sprite.Sprite):
         Remove enemy from screen.
         """
         self.kill()
+        self.game.friend_eater = None
 
 
 class WaddleBug(Enemy):
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
-        self.groups = self.game.all_sprites
 
         self.x = x * TILE_SIZE
         self.y = y * TILE_SIZE
@@ -531,7 +532,6 @@ class GrimLeaper(Enemy):
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
-        self.groups = self.game.all_sprites
 
         self.x = x * TILE_SIZE
         self.y = y * TILE_SIZE
@@ -691,7 +691,6 @@ class WaitWatch(Enemy):
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
-        self.groups = self.game.all_sprites
 
         self.x = x * TILE_SIZE
         self.y = y * TILE_SIZE
@@ -901,7 +900,6 @@ class FriendEater(Enemy):
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
-        self.groups = self.game.all_sprites
 
         self.x = x * TILE_SIZE
         self.y = y * TILE_SIZE
@@ -911,7 +909,7 @@ class FriendEater(Enemy):
         self.rel_x = self.x
         self.rel_y = self.y
 
-        self.image = self.game.enemy_sheet.get_sprite(0, 160, self.width, self.height)
+        self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
         self.image.set_colorkey(NASTY_GREEN)
 
         self.rect = self.image.get_rect()
@@ -955,7 +953,7 @@ class FriendEater(Enemy):
         """
         self.collide_player()
         if self.movement_start == self.movement_end and self.movement_delay < pygame.time.get_ticks():
-            self.movement_start, self.movement_end, self.movement_delay = 0, 32, 0
+            self.movement_start, self.movement_end, self.movement_delay = 0, 32 * int(rd.random() * 5), 0
             if self.collide_block():  # If no collision, animate movement
                 self.movement_start, self.movement_end, self.movement_delay = 0, 0, 0
         elif self.movement_start != self.movement_end:
@@ -971,6 +969,7 @@ class FriendEater(Enemy):
         Randomly select a new direction for FriendEater
         """
         i = int(rd.random() * len(self.directions))
+
         self.facing = self.directions[i]
 
     def collide_block(self):
@@ -1018,26 +1017,26 @@ class FriendEater(Enemy):
         Resets FriendEater's sprite to stationary
         """
         if self.facing == DOWN:
-            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+            self.image = self.down_animations[0]
         elif self.facing == UP:
-            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+            self.image = self.up_animations[0]
         elif self.facing == LEFT:
-            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+            self.image = self.left_animations[0]
         elif self.facing == RIGHT:
-            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+            self.image = self.right_animations[0]
 
     def move_down(self):
         """
         Move FriendEater down
         """
         if self.movement_start < self.animation_frame_1:
-            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+            self.image = self.down_animations[1]
         elif self.movement_start < self.animation_frame_2:
-            self.image = self.game.enemy_sheet.get_sprite(0, 320, self.width, self.height)
+            self.image = self.down_animations[0]
         elif self.movement_start < self.animation_frame_3:
-            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+            self.image = self.down_animations[2]
         else:
-            self.image = self.game.enemy_sheet.get_sprite(0, 352, self.width, self.height)
+            self.image = self.down_animations[0]
         self.rect.y += self.speed
 
     def move_up(self):
@@ -1045,13 +1044,13 @@ class FriendEater(Enemy):
         Move FriendEater up
         """
         if self.movement_start < self.animation_frame_1:
-            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+            self.image = self.up_animations[1]
         elif self.movement_start < self.animation_frame_2:
-            self.image = self.game.enemy_sheet.get_sprite(32, 320, self.width, self.height)
+            self.image = self.up_animations[0]
         elif self.movement_start < self.animation_frame_3:
-            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+            self.image = self.up_animations[2]
         else:
-            self.image = self.game.enemy_sheet.get_sprite(32, 352, self.width, self.height)
+            self.image = self.up_animations[0]
         self.rect.y -= self.speed
 
     def move_left(self):
@@ -1059,13 +1058,13 @@ class FriendEater(Enemy):
         Move FriendEater left
         """
         if self.movement_start < self.animation_frame_1:
-            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+            self.image = self.left_animations[1]
         elif self.movement_start < self.animation_frame_2:
-            self.image = self.game.enemy_sheet.get_sprite(64, 320, self.width, self.height)
+            self.image = self.left_animations[0]
         elif self.movement_start < self.animation_frame_3:
-            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+            self.image = self.left_animations[2]
         else:
-            self.image = self.game.enemy_sheet.get_sprite(64, 352, self.width, self.height)
+            self.image = self.left_animations[0]
         self.rect.x -= self.speed
 
     def move_right(self):
@@ -1073,14 +1072,13 @@ class FriendEater(Enemy):
         Move FriendEater right
         """
         if self.movement_start < self.animation_frame_1:
-            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+            self.image = self.right_animations[1]
         elif self.movement_start < self.animation_frame_2:
-            self.image = self.game.enemy_sheet.get_sprite(96, 320, self.width, self.height)
+            self.image = self.right_animations[0]
         elif self.movement_start < self.animation_frame_3:
-            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+            self.image = self.right_animations[2]
         else:
-            self.image = self.game.enemy_sheet.get_sprite(96, 352, self.width, self.height)
-
+            self.image = self.right_animations[0]
         self.rect.x += self.speed
 
     def update_relative_pos(self):
@@ -1101,7 +1099,6 @@ class ZipperMouth(Enemy):
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
-        self.groups = self.game.all_sprites
 
         self.x = x * TILE_SIZE
         self.y = y * TILE_SIZE
@@ -1124,24 +1121,24 @@ class ZipperMouth(Enemy):
         self.facing = DOWN
 
         self.down_animations = [
-            self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(0, 320, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(0, 352, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 384, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 416, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(0, 448, self.width, self.height),
         ]
         self.up_animations = [
-            self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(32, 320, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(32, 352, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 384, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 416, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(32, 448, self.width, self.height),
         ]
         self.left_animations = [
-            self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(64, 320, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(64, 352, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 384, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 416, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(64, 448, self.width, self.height),
         ]
         self.right_animations = [
-            self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(96, 320, self.width, self.height),
-            self.game.enemy_sheet.get_sprite(96, 352, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 384, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 416, self.width, self.height),
+            self.game.enemy_sheet.get_sprite(96, 448, self.width, self.height),
         ]
 
         self.animation_frame_1 = 8
@@ -1164,7 +1161,6 @@ class ZipperMouth(Enemy):
             self.animate_movement()
             if self.movement_start == self.movement_end:
                 self.update_relative_pos()
-                self.movement_delay = pygame.time.get_ticks() + 1000
                 self.stationary()
                 self.target = self.get_player_location()
                 self.facing = self.get_next_direction()
@@ -1221,26 +1217,26 @@ class ZipperMouth(Enemy):
         Resets FriendEater's sprite to stationary
         """
         if self.facing == DOWN:
-            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+            self.image = self.down_animations[0]
         elif self.facing == UP:
-            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+            self.image = self.up_animations[0]
         elif self.facing == LEFT:
-            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+            self.image = self.left_animations[0]
         elif self.facing == RIGHT:
-            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+            self.image = self.right_animations[0]
 
     def move_down(self):
         """
         Move FriendEater down
         """
         if self.movement_start < self.animation_frame_1:
-            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+            self.image = self.down_animations[1]
         elif self.movement_start < self.animation_frame_2:
-            self.image = self.game.enemy_sheet.get_sprite(0, 320, self.width, self.height)
+            self.image = self.down_animations[0]
         elif self.movement_start < self.animation_frame_3:
-            self.image = self.game.enemy_sheet.get_sprite(0, 288, self.width, self.height)
+            self.image = self.down_animations[2]
         else:
-            self.image = self.game.enemy_sheet.get_sprite(0, 352, self.width, self.height)
+            self.image = self.down_animations[0]
         self.rect.y += self.speed
 
     def move_up(self):
@@ -1248,13 +1244,13 @@ class ZipperMouth(Enemy):
         Move FriendEater up
         """
         if self.movement_start < self.animation_frame_1:
-            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+            self.image = self.up_animations[1]
         elif self.movement_start < self.animation_frame_2:
-            self.image = self.game.enemy_sheet.get_sprite(32, 320, self.width, self.height)
+            self.image = self.up_animations[0]
         elif self.movement_start < self.animation_frame_3:
-            self.image = self.game.enemy_sheet.get_sprite(32, 288, self.width, self.height)
+            self.image = self.up_animations[2]
         else:
-            self.image = self.game.enemy_sheet.get_sprite(32, 352, self.width, self.height)
+            self.image = self.up_animations[0]
         self.rect.y -= self.speed
 
     def move_left(self):
@@ -1262,13 +1258,13 @@ class ZipperMouth(Enemy):
         Move FriendEater left
         """
         if self.movement_start < self.animation_frame_1:
-            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+            self.image = self.left_animations[1]
         elif self.movement_start < self.animation_frame_2:
-            self.image = self.game.enemy_sheet.get_sprite(64, 320, self.width, self.height)
+            self.image = self.left_animations[0]
         elif self.movement_start < self.animation_frame_3:
-            self.image = self.game.enemy_sheet.get_sprite(64, 288, self.width, self.height)
+            self.image = self.left_animations[2]
         else:
-            self.image = self.game.enemy_sheet.get_sprite(64, 352, self.width, self.height)
+            self.image = self.left_animations[0]
         self.rect.x -= self.speed
 
     def move_right(self):
@@ -1276,14 +1272,13 @@ class ZipperMouth(Enemy):
         Move FriendEater right
         """
         if self.movement_start < self.animation_frame_1:
-            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+            self.image = self.right_animations[1]
         elif self.movement_start < self.animation_frame_2:
-            self.image = self.game.enemy_sheet.get_sprite(96, 320, self.width, self.height)
+            self.image = self.right_animations[0]
         elif self.movement_start < self.animation_frame_3:
-            self.image = self.game.enemy_sheet.get_sprite(96, 288, self.width, self.height)
+            self.image = self.right_animations[2]
         else:
-            self.image = self.game.enemy_sheet.get_sprite(96, 352, self.width, self.height)
-
+            self.image = self.right_animations[0]
         self.rect.x += self.speed
 
     def update_relative_pos(self):
@@ -1340,7 +1335,7 @@ class Ground(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = GROUND_LAYER
-        self.groups = self.game.all_sprites
+        self.groups = self.game.all_sprites, self.game.ground
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x * TILE_SIZE
@@ -1354,13 +1349,31 @@ class Ground(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+        self.poisoned = False
+        self.poisoned_timer = 0
 
-    # def update(self):
-    #     if self.is_poisoned():
-    #         self.image = self.game.terrain_sheet.get_sprite(32, 0, self.width, self.height)
-    #
-    # def is_poisoned(self):
-    #     return pygame.sprite.collide_circle(self, self.game.friend_eater)
+    def update(self):
+        if self.touched_by_friendeater() and self.poisoned is False:
+            self.image = self.game.terrain_sheet.get_sprite(32, 0, self.width, self.height)
+            self.poisoned = True
+            self.poisoned_timer = pygame.time.get_ticks() + 10000
+        elif self.poisoned_timer < pygame.time.get_ticks() and self.poisoned is True:
+            self.image = self.game.terrain_sheet.get_sprite(0, 0, self.width, self.height)
+            self.poisoned = False
+
+        if self.is_hitting_player() and self.is_poisoned():
+            self.game.play_sound(DAMAGE)
+            self.game.player.kill_player()
+
+    def touched_by_friendeater(self):
+        if isinstance(self.game.friend_eater, pygame.sprite.Sprite):
+            return pygame.sprite.collide_rect(self.game.friend_eater, self)
+
+    def is_hitting_player(self):
+        return pygame.sprite.collide_rect(self.game.player, self)
+
+    def is_poisoned(self):
+        return self.poisoned
 
 
 class Poison(pygame.sprite.Sprite):
@@ -1440,7 +1453,7 @@ class Door(pygame.sprite.Sprite):
 class Item(pygame.sprite.Sprite):
     def __init__(self, game):
         self.game = game
-        self.groups = self.game.all_sprites, self.game.friend_eater
+        self.groups = self.game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
 
     def update(self):

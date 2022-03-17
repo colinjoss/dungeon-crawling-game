@@ -301,7 +301,7 @@ def place_enemies(matrix, rows, columns):
     """
     Randomly places enemies in the dungeon room.
     """
-    enemies = ['Ezm']
+    enemies = ['Efe']
     n = get_total_enemies()
     for i in range(0, n):
         r = math.floor(rd.random() * (rows - 24))

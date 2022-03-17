@@ -20,6 +20,7 @@ class Game:
         self.player = None
         self.bg = None
         self.loc = None
+        self.friend_eater = None
 
         # Sprite sheets
         self.character_sheet = SpriteSheet('img/player_sheet.png')
@@ -31,11 +32,11 @@ class Game:
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.all_doors = pygame.sprite.LayeredUpdates()
         self.all_enemies = pygame.sprite.LayeredUpdates()
-        self.friend_eater = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.doors = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
+        self.ground = pygame.sprite.LayeredUpdates()
 
         # Counts and tallies
         self.lives = 3
@@ -48,19 +49,18 @@ class Game:
         self.paths = 0
         self.unopened_doors = []
         self.locked_doors = []
+        self.current_room = None
 
         # Special switches
         self.home = False
         self.shop = False
         self.challenge = False
 
-        self.sprite_key = {'.': Ground,
-                           'B': Block,
+        self.sprite_key = {'B': Block,
                            'S': ShopKeep,
                            'Ewb': WaddleBug,
                            'Egl': GrimLeaper,
                            'Eww': WaitWatch,
-                           'Efe': FriendEater,
                            'Egf': None,
                            'Ezm': ZipperMouth,
                            'Ch': Cherry,
@@ -156,10 +156,15 @@ class Game:
         """
         for y, row in enumerate(room.data):
             for x, col in enumerate(row):
+                Ground(self, x, y)
                 if isinstance(col, int):  # If number, create door
                     self.place_door(col, x, y)
+                elif col == '.':
+                    continue
                 elif col == 'P':  # If P, create player
                     self.player = Player(self, x, y)
+                elif col == 'Efe':
+                    self.friend_eater = FriendEater(self, x, y)
                 else:  # Otherwise create sprite via sprite key
                     self.sprite_key[col](self, x, y)
 
