@@ -247,7 +247,9 @@ class Player(pygame.sprite.Sprite):
     def check_facing_tile(self):
         tile = self.get_facing_tile()
         if self.game.loc.data[tile[0]//32][tile[1]//32] == 'S':
-            self.game.interact_shop()
+            if self.game.shop is None:
+                self.game.shop = self.game.open_shop()
+            self.game.trade()
 
     def get_facing_tile(self):
         if self.facing == UP:
