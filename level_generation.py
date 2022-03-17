@@ -1,5 +1,6 @@
 import random as rd
 import math
+from config import *
 
 
 class MapTree:
@@ -195,7 +196,7 @@ def new_map(game, dimensions, empty):
         fruit_coords = []
     else:
         fruit, fruit_coords = place_items(data, dimensions[0], dimensions[1], game)
-        place_enemies(data, dimensions[0], dimensions[1])
+        place_enemies(data, dimensions[0], dimensions[1], game)
 
     return MapNode(next(room_count), data, dimensions, fruit, fruit_coords)
 
@@ -297,31 +298,47 @@ def get_total_items():
     return 3
 
 
-def place_enemies(matrix, rows, columns):
+def place_enemies(matrix, rows, columns, game):
     """
     Randomly places enemies in the dungeon room.
     """
-    enemies = ['Efe']
-    n = get_total_enemies()
-    for i in range(0, n):
+    i = 0
+    while i < get_total_enemies(game):
         r = math.floor(rd.random() * (rows - 24))
         c = math.floor(rd.random() * (columns - 24))
-        if matrix[r + 12][c + 12] == '.':
-            matrix[r + 12][c + 12] = enemies[math.floor(rd.random() * 1)]
+        if matrix[r + 14][c + 14] == '.':
+            matrix[r + 14][c + 14] = get_enemy(game)
+            i += 1
 
 
-def get_total_enemies():
+def get_enemy(game):
+    if game.level == 1:
+        probability = {0: 'Ezm', 5: 'Eww', 10: 'Efe', 50: 'Egl', 100: 'Ewb'}
+    elif game.level == 2:
+        probability = {5: 'Ezm', 10: 'Eww', 30: 'Efe', 60: 'Egl', 100: 'Ewb'}
+    elif game.level == 3:
+        probability = {10: 'Ezm', 30: 'Eww', 50: 'Efe', 70: 'Egl', 100: 'Ewb'}
+    elif game.level == 4:
+        probability = {20: 'Ezm', 40: 'Eww', 60: 'Efe', 80: 'Egl', 100: 'Ewb'}
+
+    seed = int(rd.random() * 100)
+    for key in probability:
+        if seed <= key:
+            return probability[key]
+
+
+def get_total_enemies(game):
     """
     Returns number of enemies based on current depth and level (NOT YET IMPLEMENTED)
     """
-    return 1
+    return game.level * 2
 
 
 def get_random_dimensions(game):
     """
     Returns random room dimensions. Size range increases with player depth.
     """
-    rows, columns = rd.randint(6, 10) + game.depth, rd.randint(6, 10) + game.depth  # Get random dimensions
+    rows, columns = rd.randint(6, 10) + game.depth // 4, rd.randint(6, 10) + game.depth // 4  # Get random dimensions
     rows, columns = rows + 24, columns + 24  # Adjust rows/columns for border
     return rows, columns
 

@@ -329,14 +329,13 @@ class Enemy(pygame.sprite.Sprite):
         self.y_change = 0
         self.animation_loop = 0
         self.movement_delay = 0
-        print('hehehehehe')
         pygame.sprite.Sprite.__init__(self, self.groups)
 
     def collide_player(self):
         """
         If enemy hits player, kill player.
         """
-        if self.is_hitting_player():
+        if self.is_hitting_player() and self.game.invulnerable is False:
             self.game.play_sound(DAMAGE)
             self.game.player.kill_player()
 
@@ -1313,6 +1312,66 @@ class ZipperMouth(Enemy):
         return rd.choice(possible)
 
 
+# class Spawner(pygame.sprite.Sprite):
+#     def __init__(self, game, x, y):
+#         self.game = game
+#         self.groups = self.game.all_sprites
+#         pygame.sprite.Sprite.__init__(self, self.groups)
+#
+#         self._layer = PLAYER_LAYER
+#         self.x = x * TILE_SIZE
+#         self.y = y * TILE_SIZE
+#         self.width = TILE_SIZE
+#         self.height = TILE_SIZE
+#         self.image = self.game.terrain_sheet.get_sprite(64, 0, self.width, self.height)
+#         self.image.set_colorkey(NASTY_GREEN)
+#         self.rect = self.image.get_rect()
+#         self.rect.x = self.x
+#         self.rect.y = self.y
+#
+#         self.data = self.generate_data()
+#         self.timer = self.set_timer()
+#
+#     def update(self):
+#         if self.timer < pygame.time.get_ticks():
+#             self.timer = self.set_timer()
+#             self.spawn()
+#
+#     def generate_data(self):
+#         if self.game.level == 1:
+#             return {0: 'Ezm', 5: 'Eww', 10: 'Efe', 50: 'Egl', 100: 'Ewb'}
+#         elif self.game.level == 2:
+#             return {5: 'Ezm', 10: 'Eww', 30: 'Efe', 60: 'Egl', 100: 'Ewb'}
+#         elif self.game.level == 3:
+#             return {10: 'Ezm', 30: 'Eww', 50: 'Efe', 70: 'Egl', 100: 'Ewb'}
+#         elif self.game.level == 4:
+#             return {20: 'Ezm', 40: 'Eww', 60: 'Efe', 80: 'Egl', 100: 'Ewb'}
+#
+#     def set_timer(self):
+#         if self.game.level == 1:
+#             return pygame.time.get_ticks() + 4000
+#         elif self.game.level == 2:
+#             return pygame.time.get_ticks() + 3000
+#         elif self.game.level == 3:
+#             return pygame.time.get_ticks() + 2000
+#         elif self.game.level == 4:
+#             return pygame.time.get_ticks() + 1000
+#
+#     def spawn(self):
+#         seed = int(rd.random() * 100)
+#         for key in self.data:
+#             if seed <= key:
+#                 if self.data[key] == 'Efe':
+#                     new_enemy = self.game.friend_eater = FriendEater(self.game,
+#                                                                      self.x//32 - self.game.player.rel_x//32,
+#                                                                      self.x//32 - self.game.player.rel_x//32)
+#                 else:
+#                     new_enemy = self.game.sprite_key[self.data[key]](self.game,
+#                                                                      self.x//32 - self.game.player.rel_x//32,
+#                                                                      self.x//32 - self.game.player.rel_x//32)
+#                 break
+
+
 class Block(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
@@ -1363,7 +1422,7 @@ class Ground(pygame.sprite.Sprite):
             self.image = self.game.terrain_sheet.get_sprite(0, 0, self.width, self.height)
             self.poisoned = False
 
-        if self.is_hitting_player() and self.is_poisoned():
+        if self.is_hitting_player() and self.is_poisoned() and self.game.invulnerable is False:
             self.game.play_sound(DAMAGE)
             self.game.player.kill_player()
 

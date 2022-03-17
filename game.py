@@ -51,6 +51,8 @@ class Game:
         self.unopened_doors = []
         self.locked_doors = []
         self.current_room = None
+        self.invulnerable = False
+        self.invulnerability_timer = 0
 
         # Special switches
         self.home = False
@@ -144,11 +146,14 @@ class Game:
         """
         Loads the current dungeon room.
         """
+        self.invulnerable = True
+        self.invulnerability_timer = pygame.time.get_ticks() + 1000
         self.set_current_location(room)  # Set incoming as current location
         room.data[player[0] + 1][player[1]] = 'P'  # Place player spawn in room data
         self.build_map(room)  # Translate map data to sprites
         room.data[player[0] + 1][player[1]] = '.'  # Remove player spawn
         self.center_camera(player)  # Center camera on player
+
 
     def build_map(self, room):
         """
@@ -213,6 +218,9 @@ class Game:
         """
         Update sprites on the map.
         """
+        if self.invulnerability_timer < pygame.time.get_ticks():
+            self.invulnerable = False
+
         self.update_level()
         if self.loc.fruit == 0 and self.loc.cleared is False:
             self.unlock_all_doors()
@@ -424,6 +432,8 @@ class Game:
         if self.lives == 0:
             self.game_over()
         else:
+            self.invulnerable = True
+            self.invulnerability_timer = pygame.time.get_ticks() + 1000
             self.load_room(self.loc, (len(self.loc.data) // 2, len(self.loc.data[0]) // 2))
 
     def traverse(self, door):

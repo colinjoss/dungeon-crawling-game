@@ -57,3 +57,8 @@ TITLE_MENU_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 22)
 SMALL_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 16)
 
 WORLDS = ['desert', 'forest', 'ocean', 'mountain']
+
+LV1_ENEMIES = [{'Ewb': 100}, {'Egl': 50}, {'Efe': 101}, {'Eww': 101}, {'Ezm': 101}]
+LV2_ENEMIES = [{'Ewb': 100}, {'Egl': 66}, {'Efe': 33}, {'Eww': 101}, {'Ezm': 101}]
+LV3_ENEMIES = [{'Ewb': 100}, {'Egl': 75}, {'Efe': 50}, {'Eww': 25}, {'Ezm': 101}]
+LV5_ENEMIES = [{'Ewb': 100}, {'Egl': 80}, {'Efe': 60}, {'Eww': 40}, {'Ezm': 20}]
