@@ -39,6 +39,7 @@ class Game:
 
         # Counts and tallies
         self.lives = 3
+        self.life_shards = 0
         self.fruit_count = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
         self.visited = [0]
         self.unvisited = 0
@@ -198,15 +199,33 @@ class Game:
 
     def interact_shop(self):
         menus = self.import_shop_menus()
+        wares = self.restock(3, [])
         i = 0
         shop_open = True
         while shop_open:
-            self.screen.blit(menus[i], (208, 112))
+            self.screen.blit(menus[i], (192, 112))
+            self.blit_wares(wares)
             for event in pygame.event.get():
                 i = self.update_shop_menu(event, i)
             if i < 0:
                 shop_open = False
             pygame.display.update()
+
+    def blit_wares(self, wares):
+        y = 158
+        for ware in wares:
+            self.screen.blit(ware[0][0], (218, y))          # Fruit cost !
+            self.screen.blit(ware[0][1], (354, y))          # Ware !
+            self.blit_ware_price(ware[1][0], (262, y+10))   # Price !
+            self.blit_ware_price(ware[1][1], (400, y+10))   # How many wares
+            y += 64
+
+    def blit_ware_price(self, price, pos):
+        ones, tens, hunds = price % 10, (price // 10) % 10, price // 100
+        t = SMALL_FONT.render(str(hunds) + str(tens) + str(ones), True, 'white')
+        t_rect = t.get_rect()
+        t_rect.center = pos
+        self.screen.blit(t, pos)
 
     def update_shop_menu(self, event, i):
         if event.type == pygame.KEYDOWN:
@@ -223,8 +242,42 @@ class Game:
             if event.key == pygame.K_x:
                 return -1
             if event.key == pygame.K_z:
-                pass
+                self.purchase()
         return i
+
+    def purchase(self):
+        return
+
+    def restock(self, amount, wares):
+        for i in range(0, amount):
+            if self.depth == 0 and not self.is_lives_full() and len(wares) == 0:
+                wares.append(self.stock_life_shard())
+            elif len(wares) < amount:
+                wares.append(self.stock_random_fruit())
+
+        return wares
+
+    def stock_life_shard(self):
+        life_shard = self.items_sheet.get_sprite(192, 0, 32, 32)
+        life_shard.set_colorkey(NASTY_GREEN)
+        fruit_give = self.items_sheet.get_sprite(int(rd.random() * 6) * 32, 0, 32, 32)
+        fruit_give.set_colorkey(NASTY_GREEN)
+        num = (self.lives * 20) + (self.life_shards * 5)
+        return [[fruit_give, life_shard], [num, 1]]
+
+    def stock_random_fruit(self):
+        fruit_give = self.items_sheet.get_sprite(int(rd.random() * 6) * 32, 0, 32, 32)
+        fruit_give.set_colorkey(NASTY_GREEN)
+        num = 2 + int(rd.random() * 3)
+        fruit_return = self.items_sheet.get_sprite(int(rd.random() * 6) * 32, 0, 32, 32)
+        fruit_return.set_colorkey(NASTY_GREEN)
+        return [[fruit_give, fruit_return], [num, 1]]
+
+    def is_shop_full(self, wares):
+        return wares == 3
+
+    def is_lives_full(self):
+        return self.lives == 5
 
     def import_shop_menus(self):
         menu_1 = pygame.image.load('img/shop_menu_1.png')
