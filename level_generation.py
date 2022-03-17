@@ -278,7 +278,7 @@ def place_items(data, rows, columns, game):
     """
     Randomly places items in the dungeon room.
     """
-    n = get_total_items()
+    n = get_total_items(game)
     items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
     coords = []
     count = 0
@@ -291,11 +291,11 @@ def place_items(data, rows, columns, game):
     return count, coords
 
 
-def get_total_items():
+def get_total_items(game):
     """
     Returns number of items based on current depth (NOT YET IMPLEMENTED)
     """
-    return 3
+    return 1 + (game.depth // 5)
 
 
 def place_enemies(matrix, rows, columns, game):

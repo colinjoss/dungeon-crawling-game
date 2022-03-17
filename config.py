@@ -30,8 +30,8 @@ NASTY_GREEN = (181, 230, 29)
 LIFE = pygame.image.load('img/life.png')
 LIFE.set_colorkey(NASTY_GREEN)
 
-PROG = [1, 5, 10, 15, 20, 100]
-REG = [-1, -1, 4, 9, 14, 19]
+PROG = [1, 25, 50, 75, 100, 1000]
+REG = [-1, -1, 24, 49, 74, 99]
 
 BACKGROUND = ['beach', 'space', 'mountain', 'garden']
 HOME = 'img/bg/shore.jpg'
@@ -51,6 +51,7 @@ GAME_OVER = pygame.mixer.Sound('sound/effects/game_over.wav')
 CLEAR = pygame.mixer.Sound('sound/effects/clear.wav')
 ERROR = pygame.mixer.Sound('sound/effects/error.wav')
 PURCHASE = pygame.mixer.Sound('sound/effects/purchase.wav')
+VICTORY = pygame.mixer.Sound('sound/effects/clear.wav')
 
 TITLE_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 36)
 TITLE_MENU_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 22)

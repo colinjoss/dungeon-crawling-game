@@ -218,14 +218,21 @@ class Game:
         """
         Update sprites on the map.
         """
-        if self.invulnerability_timer < pygame.time.get_ticks():
-            self.invulnerable = False
-
+        self.check_invulnerability()
+        self.check_victory()
         self.update_level()
         if self.loc.fruit == 0 and self.loc.cleared is False:
             self.unlock_all_doors()
             self.kill_all_enemies()
         self.all_sprites.update()
+
+    def check_invulnerability(self):
+        if self.invulnerability_timer < pygame.time.get_ticks():
+            self.invulnerable = False
+
+    def check_victory(self):
+        if self.depth == 99:
+            self.victory()
 
     def unlock_all_doors(self):
         """
@@ -328,6 +335,18 @@ class Game:
         pygame.display.update()
         pygame.mixer.music.stop()
         pygame.mixer.Sound.play(GAME_OVER)
+        pygame.time.delay(3000)
+        self.playing = False
+
+    def victory(self):
+        title = TITLE_FONT.render('CONGRATULATIONS!', True, 'BLUE')
+        title_rect = title.get_rect()
+        title_rect.center = (336, 150)
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(title, title_rect)
+        pygame.display.update()
+        pygame.mixer.music.stop()
+        pygame.mixer.Sound.play(VICTORY)
         pygame.time.delay(3000)
         self.playing = False
 
