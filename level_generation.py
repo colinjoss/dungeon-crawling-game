@@ -21,12 +21,11 @@ class MapNode:
     """
     Represents an individual dungeon room.
     """
-    def __init__(self, num, data, dimensions, fruit, fruit_coords):
+    def __init__(self, num, data, dimensions, fruit):
         self.num = num
         self.data = data
         self.dimensions = dimensions
         self.fruit = fruit
-        self.fruit_coords = fruit_coords
         self.bridges = {}
         self.cleared = False
         
@@ -171,7 +170,14 @@ def dead_end(current, key, game):
     """
     Creates dead end room.
     """
-    node = new_map(game, (5+24, 5+24), True)  # New dungeon
+    node = empty_dead_end(current, key, game)
+    seed = int(rd.random() * 100)
+    if seed < 50:
+        treasure_dead_end(node)
+
+
+def empty_dead_end(current, key, game):
+    node = new_map(game, (5 + 24, 5 + 24), True)  # New dungeon
     door_data = {}
     corners = get_corners(node.dimensions)
     d_num, d_coord = create_door(node, door_data, corners, game)  # First door
@@ -183,6 +189,19 @@ def dead_end(current, key, game):
     current.bridges[key] = bridge_1
     bridge_2 = BridgeNode(current, ret_spawn)
     node.bridges[d_num] = bridge_2
+    return node
+
+
+def treasure_dead_end(node):
+    items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
+    for i, row in enumerate(node.data):
+        for j, col in enumerate(node.data):
+            if node.data[i][j] == '.':
+                node.data[i][j] = items[math.floor(rd.random() * 6)]
+
+
+def survival_dead_end(node, game):
+    place_enemies(node.data, 5 + 24, 5 + 24, game)
 
 
 def new_map(game, dimensions, empty):
@@ -193,12 +212,11 @@ def new_map(game, dimensions, empty):
 
     if empty:
         fruit = 0
-        fruit_coords = []
     else:
-        fruit, fruit_coords = place_items(data, dimensions[0], dimensions[1], game)
+        fruit = place_items(data, dimensions[0], dimensions[1], game)
         place_enemies(data, dimensions[0], dimensions[1], game)
 
-    return MapNode(next(room_count), data, dimensions, fruit, fruit_coords)
+    return MapNode(next(room_count), data, dimensions, fruit)
 
 
 def create_first_node(game):
@@ -280,15 +298,13 @@ def place_items(data, rows, columns, game):
     """
     n = get_total_items(game)
     items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
-    coords = []
     count = 0
     while count < n:
         r, c = math.floor(rd.random() * (rows - 28)), math.floor(rd.random() * (columns - 28))
         if data[r + 14][c + 14] == '.':
             data[r + 14][c + 14] = items[math.floor(rd.random() * 6)]
             count += 1
-            coords.append((r+14, c+14))
-    return count, coords
+    return count
 
 
 def get_total_items(game):

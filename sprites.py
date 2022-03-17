@@ -242,7 +242,6 @@ class Player(pygame.sprite.Sprite):
         if self.game.loc.data[self.rel_y//32][self.rel_x//32] in items:
             self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
             self.game.loc.fruit -= 1
-            self.game.loc.fruit_coords.remove((self.rel_y//32, self.rel_x//32))
 
     def check_facing_tile(self):
         tile = self.get_facing_tile()

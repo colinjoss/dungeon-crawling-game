@@ -42,7 +42,7 @@ class Game:
         # Counts and tallies
         self.lives = 3
         self.life_shards = 0
-        self.fruit_count = {0: 100, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        self.fruit_count = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
         self.visited = [0]
         self.unvisited = 0
         self.depth = 0
@@ -153,7 +153,6 @@ class Game:
         self.build_map(room)  # Translate map data to sprites
         room.data[player[0] + 1][player[1]] = '.'  # Remove player spawn
         self.center_camera(player)  # Center camera on player
-
 
     def build_map(self, room):
         """
