@@ -1342,7 +1342,10 @@ class ZipperMouth(Enemy):
             possible.append(RIGHT)
         elif self.target[1] < curr[1]:
             possible.append(LEFT)
-        return rd.choice(possible)
+
+        if len(possible) > 0:
+            return rd.choice(possible)
+        return DOWN
 
     def defeat(self):
         """

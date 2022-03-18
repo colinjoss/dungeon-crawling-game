@@ -65,7 +65,6 @@ class Game:
 
         # Special switches
         self.home = False
-        self.challenge = False
 
         self.sprite_key = {'B': Block,
                            'S': ShopKeep,
@@ -134,7 +133,7 @@ class Game:
         Resets key variables for a new game.
         """
         self.player = None
-        self.lives = 1
+        self.lives = 5
         self.visited = [0]
         self.unvisited = 0
         self.depth = 0
@@ -146,6 +145,12 @@ class Game:
         self.door_count = sequence()
         self.room_count = sequence()
         self.friend_eater = None
+        self.current_room = None
+        self.invulnerable = False
+        self.invulnerability_timer = 0
+        self.bg = None
+        self.loc = None
+        self.shop = None
 
     def start(self):
         """
@@ -232,7 +237,8 @@ class Game:
         Update sprites on the map.
         """
         self.check_invulnerability()
-        self.check_victory()
+        if self.is_victory():
+            return self.victory()
         self.update_level()
         if self.loc.fruit == 0 and self.loc.cleared is False:
             self.unlock_all_doors()
@@ -243,9 +249,10 @@ class Game:
         if self.invulnerability_timer < pygame.time.get_ticks():
             self.invulnerable = False
 
-    def check_victory(self):
-        if self.depth == 99:
-            self.victory()
+    def is_victory(self):
+        if self.depth == 101:
+            return True
+        return False
 
     def unlock_all_doors(self):
         """
@@ -362,8 +369,8 @@ class Game:
         self.screen.blit(title, title_rect)
         pygame.display.update()
         pygame.mixer.music.stop()
-        pygame.mixer.Sound.play(VICTORY)
-        pygame.time.delay(2000)
+        self.play_song(HUZZAH)
+        pygame.time.delay(8000)
         self.playing = False
 
     def title_screen(self):

@@ -88,7 +88,6 @@ def generate_starting_maps(game):
     node_1, door_data_1, player = create_first_node(game)   # First dungeon room
     node_2, door_data_2 = create_second_node(game)          # Second dungeon room
     game.increment_paths()
-    print(door_data_1, door_data_2)
     bridge_1 = BridgeNode(node_2, door_data_2[1])   # Bridge from door 0 -> 1
     bridge_2 = BridgeNode(node_1, door_data_1[0])   # Bridge from door 1 -> 0
     node_1.bridges[0] = bridge_1
@@ -110,10 +109,15 @@ def generate_next_maps(game, current):
         if i == 0:      # Always skip first door - already bridged
             continue
 
+        if game.depth == 8:
+            generate_end_room(game, current, key)
+            continue
+
         seed = rd.random() * 100
         if seed > dead_seed:
-            dead_end(current, key, game)
-            continue
+            pass
+            # dead_end(current, key, game)
+            # continue
 
         node = new_map(game, get_random_dimensions(game), False)    # New dungeon
         door_data = {}
@@ -135,6 +139,27 @@ def generate_next_maps(game, current):
             game.increment_paths()
 
     return current
+
+
+def generate_end_room(game, current, key):
+    node = new_map(game, (50, 50), False)  # New dungeon
+    door_data = {}
+    corners = get_corners(node.dimensions)
+    d_num, d_coord = create_door(node, door_data, corners, game)  # First door
+    node.data[d_coord[0]][d_coord[1]] = d_num
+    game.unopened_doors.pop()
+
+    bridge_1 = BridgeNode(node, door_data[d_num])  # Connect first door to current room
+    ret_spawn = current.bridges[key]
+    current.bridges[key] = bridge_1
+    bridge_2 = BridgeNode(current, ret_spawn)
+    node.bridges[d_num] = bridge_2
+
+    for i in range(0, 1):  # Create up to three more doors
+        d_num, d_coord = create_door(node, door_data, corners, game)
+        node.data[d_coord[0]][d_coord[1]] = d_num
+        node.bridges[d_num] = door_data[d_num]
+        game.increment_paths()
 
 
 def get_dead_end_probability(game):
@@ -321,11 +346,11 @@ def get_enemy(game):
     if game.level == 1:
         probability = {0: 'Ezm', 5: 'Eww', 10: 'Efe', 50: 'Egl', 100: 'Ewb'}
     elif game.level == 2:
-        probability = {5: 'Ezm', 10: 'Eww', 30: 'Efe', 60: 'Egl', 100: 'Ewb'}
+        probability = {10: 'Ezm', 20: 'Eww', 40: 'Efe', 70: 'Egl', 100: 'Ewb'}
     elif game.level == 3:
-        probability = {10: 'Ezm', 30: 'Eww', 50: 'Efe', 70: 'Egl', 100: 'Ewb'}
-    elif game.level == 4:
         probability = {20: 'Ezm', 40: 'Eww', 60: 'Efe', 80: 'Egl', 100: 'Ewb'}
+    elif game.level == 4:
+        probability = {30: 'Ezm', 60: 'Eww', 80: 'Efe', 90: 'Egl', 100: 'Ewb'}
 
     seed = int(rd.random() * 100)
     for key in probability:
