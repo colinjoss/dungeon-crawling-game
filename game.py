@@ -260,6 +260,7 @@ class Game:
         """
         for enemy in self.all_enemies:
             enemy.defeat()
+        pygame.time.wait(150)
 
     def draw(self):
         """
@@ -350,7 +351,7 @@ class Game:
         pygame.display.update()
         pygame.mixer.music.stop()
         pygame.mixer.Sound.play(GAME_OVER)
-        pygame.time.delay(3000)
+        pygame.time.delay(2000)
         self.playing = False
 
     def victory(self):
@@ -362,7 +363,7 @@ class Game:
         pygame.display.update()
         pygame.mixer.music.stop()
         pygame.mixer.Sound.play(VICTORY)
-        pygame.time.delay(3000)
+        pygame.time.delay(2000)
         self.playing = False
 
     def title_screen(self):
@@ -463,7 +464,7 @@ class Game:
             self.blit_small_text('FIND ALL THE FRUIT', 'white', (336, 240))
             self.blit_small_text('AVOID 5 UNIQUE ENEMIES', 'white', (336, 280))
             self.blit_small_text('BUY UPGRADES', 'white', (336, 320))
-            self.blit_small_text('TRY AGAIN!', 'white', (336, 360))
+            self.blit_small_text('TRY, TRY AGAIN!', 'white', (336, 360))
             self.blit_small_text('PRESS Z TO RETURN TO MENU', 'red', (336, 400))
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:

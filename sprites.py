@@ -47,6 +47,7 @@ class Player(pygame.sprite.Sprite):
         self.sound_delay = 0
         self.facing = DOWN
         self.animation_loop = 0
+        self.speed = 4
 
         self.down_animations = [
             self.game.character_sheet.get_sprite(0, 0, self.width, self.height),
@@ -197,8 +198,8 @@ class Player(pygame.sprite.Sprite):
         """
         Animates player down movement.
         """
-        self.rect.y += 4
-        self.center_camera('y', -4)
+        self.rect.y += self.speed
+        self.center_camera('y', -1 * self.speed)
         if self.movement_start == 16:
             self.animation_loop += 1
             self.image = self.down_animations[self.animation_loop]
@@ -207,8 +208,8 @@ class Player(pygame.sprite.Sprite):
         """
         Animates player up movement.
         """
-        self.rect.y -= 4
-        self.center_camera('y', 4)
+        self.rect.y -= self.speed
+        self.center_camera('y', self.speed)
         if self.movement_start == 16:
             self.animation_loop += 1
             self.image = self.up_animations[self.animation_loop]
@@ -217,8 +218,8 @@ class Player(pygame.sprite.Sprite):
         """
         Animates player left movement.
         """
-        self.rect.x -= 4
-        self.center_camera('x', 4)
+        self.rect.x -= self.speed
+        self.center_camera('x', self.speed)
         if self.movement_start == 16:
             self.animation_loop += 1
             self.image = self.left_animations[self.animation_loop]
@@ -227,8 +228,8 @@ class Player(pygame.sprite.Sprite):
         """
         Animates player right movement.
         """
-        self.rect.x += 4
-        self.center_camera('x', -4)
+        self.rect.x += self.speed
+        self.center_camera('x', -1 * self.speed)
         if self.movement_start == 16:
             self.animation_loop += 1
             self.image = self.right_animations[self.animation_loop]
@@ -334,7 +335,10 @@ class Enemy(pygame.sprite.Sprite):
         """
         If enemy hits player, kill player.
         """
-        if self.is_hitting_player() and self.game.invulnerable is False:
+        if self.is_hitting_player() and self.game.invulnerable:
+            self.game.play_sound(SAFE)
+
+        if self.is_hitting_player() and not self.game.invulnerable:
             self.game.play_sound(DAMAGE)
             self.game.player.kill_player()
 
@@ -343,13 +347,6 @@ class Enemy(pygame.sprite.Sprite):
         Returns true if hit player, false otherwise.
         """
         return pygame.sprite.collide_rect(self.game.player, self)
-
-    def defeat(self):
-        """
-        Remove enemy from screen.
-        """
-        self.kill()
-        self.game.friend_eater = None
 
 
 class WaddleBug(Enemy):
@@ -527,6 +524,15 @@ class WaddleBug(Enemy):
             self.image = self.game.enemy_sheet.get_sprite(96, 64, self.width, self.height)
         self.rect.x += self.speed
 
+    def defeat(self):
+        """
+        Remove enemy from screen.
+        """
+        self.image = self.game.enemy_sheet.get_sprite(128, 0, 32, 32)
+        self.game.draw()
+        self.kill()
+        self.game.friend_eater = None
+
 
 class GrimLeaper(Enemy):
     def __init__(self, game, x, y):
@@ -685,6 +691,15 @@ class GrimLeaper(Enemy):
         else:  # 64
             self.rect.y += 1
         self.rect.x += self.speed
+
+    def defeat(self):
+        """
+        Remove enemy from screen.
+        """
+        self.image = self.game.enemy_sheet.get_sprite(128, 96, 32, 32)
+        self.game.draw()
+        self.kill()
+        self.game.friend_eater = None
 
 
 class WaitWatch(Enemy):
@@ -895,6 +910,15 @@ class WaitWatch(Enemy):
                 self.rect.y -= tile * amount
         return False
 
+    def defeat(self):
+        """
+        Remove enemy from screen.
+        """
+        self.image = self.game.enemy_sheet.get_sprite(128, 160, 32, 32)
+        self.game.draw()
+        self.kill()
+        self.game.friend_eater = None
+
 
 class FriendEater(Enemy):
     def __init__(self, game, x, y):
@@ -918,7 +942,7 @@ class FriendEater(Enemy):
 
         self.movement_start = 0
         self.movement_end = 0
-        self.speed = 1
+        self.speed = 2
         self.facing = DOWN
 
         self.down_animations = [
@@ -956,6 +980,7 @@ class FriendEater(Enemy):
             self.movement_start, self.movement_end, self.movement_delay = 0, 32 * int(rd.random() * 5), 0
             if self.collide_block():  # If no collision, animate movement
                 self.movement_start, self.movement_end, self.movement_delay = 0, 0, 0
+                self.change_direction()
         elif self.movement_start != self.movement_end:
             self.animate_movement()
             if self.movement_start == self.movement_end:
@@ -969,7 +994,6 @@ class FriendEater(Enemy):
         Randomly select a new direction for FriendEater
         """
         i = int(rd.random() * len(self.directions))
-
         self.facing = self.directions[i]
 
     def collide_block(self):
@@ -1094,6 +1118,15 @@ class FriendEater(Enemy):
         elif self.facing == LEFT:
             self.rel_x -= 32
 
+    def defeat(self):
+        """
+        Remove enemy from screen.
+        """
+        self.image = self.game.enemy_sheet.get_sprite(128, 288, 32, 32)
+        self.game.draw()
+        self.kill()
+        self.game.friend_eater = None
+
 
 class ZipperMouth(Enemy):
     def __init__(self, game, x, y):
@@ -1108,7 +1141,7 @@ class ZipperMouth(Enemy):
         self.rel_x = self.x
         self.rel_y = self.y
 
-        self.image = self.game.enemy_sheet.get_sprite(0, 160, self.width, self.height)
+        self.image = self.game.enemy_sheet.get_sprite(0, 384, self.width, self.height)
         self.image.set_colorkey(NASTY_GREEN)
 
         self.rect = self.image.get_rect()
@@ -1310,6 +1343,15 @@ class ZipperMouth(Enemy):
         elif self.target[1] < curr[1]:
             possible.append(LEFT)
         return rd.choice(possible)
+
+    def defeat(self):
+        """
+        Remove enemy from screen.
+        """
+        self.image = self.game.enemy_sheet.get_sprite(128, 384, 32, 32)
+        self.game.draw()
+        self.kill()
+        self.game.friend_eater = None
 
 
 # class Spawner(pygame.sprite.Sprite):
