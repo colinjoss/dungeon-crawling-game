@@ -74,17 +74,6 @@ class BridgeNode:
         return self.spawn
 
 
-def sequence():
-    n = 0
-    while True:
-        yield n
-        n += 1
-
-
-door_count = sequence()
-room_count = sequence()
-
-
 def start_tree():
     """
     Returns map tree object.
@@ -99,7 +88,7 @@ def generate_starting_maps(game):
     node_1, door_data_1, player = create_first_node(game)   # First dungeon room
     node_2, door_data_2 = create_second_node(game)          # Second dungeon room
     game.increment_paths()
-
+    print(door_data_1, door_data_2)
     bridge_1 = BridgeNode(node_2, door_data_2[1])   # Bridge from door 0 -> 1
     bridge_2 = BridgeNode(node_1, door_data_1[0])   # Bridge from door 1 -> 0
     node_1.bridges[0] = bridge_1
@@ -216,7 +205,7 @@ def new_map(game, dimensions, empty):
         fruit = place_items(data, dimensions[0], dimensions[1], game)
         place_enemies(data, dimensions[0], dimensions[1], game)
 
-    return MapNode(next(room_count), data, dimensions, fruit)
+    return MapNode(next(game.room_count), data, dimensions, fruit)
 
 
 def create_first_node(game):
@@ -265,7 +254,7 @@ def create_door(node, door_data, corners, game):
     """
     Gets new door number and door spawn point.
     """
-    d_num = next(door_count)                        # Increment the door count
+    d_num = next(game.door_count)                        # Increment the door count
     index = math.floor(rd.random() * len(corners))  # Randomly get index
     d_coord = corners[index]                        # Get corner coord
     door_data[d_num] = d_coord                      # Save coordinate
@@ -328,6 +317,7 @@ def place_enemies(matrix, rows, columns, game):
 
 
 def get_enemy(game):
+    probability = {}
     if game.level == 1:
         probability = {0: 'Ezm', 5: 'Eww', 10: 'Efe', 50: 'Egl', 100: 'Ewb'}
     elif game.level == 2:
@@ -341,13 +331,14 @@ def get_enemy(game):
     for key in probability:
         if seed <= key:
             return probability[key]
+    return '.'
 
 
 def get_total_enemies(game):
     """
     Returns number of enemies based on current depth and level (NOT YET IMPLEMENTED)
     """
-    return game.level * 2
+    return 1 + (game.depth // 4)
 
 
 def get_random_dimensions(game):

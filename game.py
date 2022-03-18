@@ -8,6 +8,13 @@ import level_generation as level
 import rpyc
 
 
+def sequence():
+    n = 0
+    while True:
+        yield n
+        n += 1
+
+
 class Game:
     def __init__(self):
 
@@ -22,6 +29,9 @@ class Game:
         self.loc = None
         self.friend_eater = None
         self.shop = None
+
+        self.door_count = sequence()
+        self.room_count = sequence()
 
         # Sprite sheets
         self.character_sheet = SpriteSheet('img/player_sheet.png')
@@ -40,9 +50,8 @@ class Game:
         self.ground = pygame.sprite.LayeredUpdates()
 
         # Counts and tallies
-        self.lives = 3
-        self.life_shards = 0
-        self.fruit_count = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        self.lives = 1
+        self.fruit_count = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
         self.visited = [0]
         self.unvisited = 0
         self.depth = 0
@@ -124,7 +133,8 @@ class Game:
         """
         Resets key variables for a new game.
         """
-        self.lives = 3
+        self.player = None
+        self.lives = 1
         self.visited = [0]
         self.unvisited = 0
         self.depth = 0
@@ -133,6 +143,9 @@ class Game:
         self.unopened_doors = []
         self.locked_doors = []
         self.home = True
+        self.door_count = sequence()
+        self.room_count = sequence()
+        self.friend_eater = None
 
     def start(self):
         """
@@ -146,6 +159,7 @@ class Game:
         """
         Loads the current dungeon room.
         """
+        self.friend_eater = None
         self.invulnerable = True
         self.invulnerability_timer = pygame.time.get_ticks() + 1000
         self.set_current_location(room)  # Set incoming as current location
@@ -266,6 +280,8 @@ class Game:
             self.set_bg(HOME)
             self.play_song(OCEAN)
             self.home = False
+            pygame.time.wait(500)
+            self.play_sound(TRY_AGAIN)
 
         elif self.depth == 1 and self.level == 0:  # First room
             self.request_bg(BACKGROUND[self.level])
@@ -355,65 +371,67 @@ class Game:
         """
         self.running = True
         self.play_song(MENU_MUSIC)
-        start_color, quit_color = 'red', 'white'
+        start_color, instruct_color, quit_color = 'red', 'white', 'white'
         while self.running:
             self.screen.fill((0, 0, 0))
-            self.blit_title_name()
-            self.blit_title_start(start_color)
-            self.blit_title_quit(quit_color)
+            self.blit_big_text('D U N G E O N', 'blue', (336, 150))
+            self.blit_small_text('START', start_color, (336, 260))
+            self.blit_small_text('RULES', instruct_color, (336, 300))
+            self.blit_small_text('QUIT', quit_color, (336, 340))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:  # Exit
                     pygame.quit()
-                start_color, quit_color = self.update_title_screen(event, start_color, quit_color)
+                start_color, instruct_color, quit_color = self.update_title_screen(
+                    event, start_color, instruct_color, quit_color)
                 if self.playing:
                     return
             pygame.display.update()
 
-    def update_title_screen(self, event, start_color, quit_color):
+    def update_title_screen(self, event, start_color, instruct_color, quit_color):
         """
         Updates title screen based on keyboard input
         """
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:  # Up arrow
+            if event.key == pygame.K_UP and instruct_color == 'red':    # Up arrow
                 self.play_sound(CHANGE_OPTION)
-                return 'red', 'white'
-            if event.key == pygame.K_DOWN:  # Down arrow
+                return 'red', 'white', 'white'
+            if event.key == pygame.K_UP and quit_color == 'red':    # Up arrow
                 self.play_sound(CHANGE_OPTION)
-                return 'white', 'red'
+                return 'white', 'red', 'white'
+            if event.key == pygame.K_DOWN and start_color == 'red':  # Up arrow
+                self.play_sound(CHANGE_OPTION)
+                return 'white', 'red', 'white'
+            if event.key == pygame.K_DOWN and instruct_color == 'red':  # Down arrow
+                self.play_sound(CHANGE_OPTION)
+                return 'white', 'white', 'red'
             if event.key == pygame.K_z and quit_color == 'red':
                 self.play_sound(SELECT)
                 self.running = False
+            if event.key == pygame.K_z and instruct_color == 'red':
+                self.play_sound(SELECT)
+                self.instructions_screen()
             if event.key == pygame.K_z and start_color == 'red':
                 self.play_sound(SELECT)
                 self.playing = True
-        return start_color, quit_color
+        return start_color, instruct_color, quit_color
 
-    def blit_title_name(self):
+    def blit_big_text(self, text, color, pos):
         """
         Displays title text to the screen.
         """
-        title = TITLE_FONT.render('D U N G E O N', True, 'blue')
-        title_rect = title.get_rect()
-        title_rect.center = (336, 150)
-        self.screen.blit(title, title_rect)
+        big_text = TITLE_FONT.render(text, True, color)
+        big_text_rect = big_text.get_rect()
+        big_text_rect.center = pos
+        self.screen.blit(big_text, big_text_rect)
 
-    def blit_title_start(self, color):
+    def blit_small_text(self, text, color, pos):
         """
         Displays start option text to the screen.
         """
-        start_text = TITLE_MENU_FONT.render('START', True, color)
-        start_text_rect = start_text.get_rect()
-        start_text_rect.center = (336, 260)
-        self.screen.blit(start_text, start_text_rect)
-
-    def blit_title_quit(self, color):
-        """
-        Displays quit option text to the screen.
-        """
-        quit_text = TITLE_MENU_FONT.render('QUIT', True, color)
-        quit_text_rect = quit_text.get_rect()
-        quit_text_rect.center = (336, 300)
-        self.screen.blit(quit_text, quit_text_rect)
+        small_text = TITLE_MENU_FONT.render(text, True, color)
+        small_text_rect = small_text.get_rect()
+        small_text_rect.center = pos
+        self.screen.blit(small_text, small_text_rect)
 
     def play_song(self, song):
         """
@@ -438,7 +456,21 @@ class Game:
         conn.close()
 
     def instructions_screen(self):
-        pass
+        while True:
+            self.screen.fill((0, 0, 0))
+            self.blit_big_text('R U L E S', 'white', (336, 80))
+            self.blit_small_text('EXPLORE A SPRAWLING DUNGEON', 'white', (336, 200))
+            self.blit_small_text('FIND ALL THE FRUIT', 'white', (336, 240))
+            self.blit_small_text('AVOID 5 UNIQUE ENEMIES', 'white', (336, 280))
+            self.blit_small_text('BUY UPGRADES', 'white', (336, 320))
+            self.blit_small_text('TRY AGAIN!', 'white', (336, 360))
+            self.blit_small_text('PRESS Z TO RETURN TO MENU', 'red', (336, 400))
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_z:
+                        self.play_sound(SELECT)
+                        return
+            pygame.display.update()
 
     def player_death(self):
         """
@@ -570,6 +602,10 @@ class Shop:
         else:
             self.game.play_sound(ERROR)
 
+        if self.game.fruit_count[6] == 4:
+            self.game.fruit_count[6] = 0
+            self.game.increment_lives()
+
     def restock(self):
         if self.game.depth == 0 and not self.is_lives_full() and self.ware_count == 0:
             self.ware_count += 1
@@ -612,7 +648,7 @@ class Trade:
 
     def set_counts(self):
         if self.ret_code == 6:
-            self.cost_count = self.game.lives * 20 + self.game.life_shards * 4
+            self.cost_count = self.game.lives * 20 + self.game.fruit_count[6] * 4
         else:
             self.cost_count = 2 + int(rd.random() * 3)
         self.ret_count = 1

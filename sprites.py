@@ -1117,7 +1117,7 @@ class ZipperMouth(Enemy):
 
         self.movement_start = 0
         self.movement_end = 0
-        self.speed = 1
+        self.speed = 2
         self.facing = DOWN
 
         self.down_animations = [
@@ -1147,6 +1147,7 @@ class ZipperMouth(Enemy):
         self.directions = [DOWN, UP, LEFT, RIGHT]
 
         self.target = self.get_player_location()
+        self.game.play_sound(ZIPPERMOUTH)
 
     def update(self):
         """

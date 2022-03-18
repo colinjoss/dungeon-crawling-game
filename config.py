@@ -52,6 +52,8 @@ CLEAR = pygame.mixer.Sound('sound/effects/clear.wav')
 ERROR = pygame.mixer.Sound('sound/effects/error.wav')
 PURCHASE = pygame.mixer.Sound('sound/effects/purchase.wav')
 VICTORY = pygame.mixer.Sound('sound/effects/clear.wav')
+ZIPPERMOUTH = pygame.mixer.Sound('sound/effects/zippermouth.mp3')
+TRY_AGAIN = pygame.mixer.Sound('sound/effects/shopkeep.mp3')
 
 TITLE_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 36)
 TITLE_MENU_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 22)
