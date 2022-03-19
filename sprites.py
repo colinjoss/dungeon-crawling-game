@@ -18,6 +18,9 @@ class SpriteSheet:
 
 
 class Player(pygame.sprite.Sprite):
+    """
+    Class representing the player character.
+    """
     def __init__(self, game, x, y):
         
         # Fundamental variables
@@ -48,6 +51,8 @@ class Player(pygame.sprite.Sprite):
         self.facing = DOWN
         self.animation_loop = 0
         self.speed = 4
+        self.invulnerable = False
+        self.invulnerability_timer = 0
 
         self.down_animations = [
             self.game.character_sheet.get_sprite(0, 0, self.width, self.height),
@@ -79,9 +84,8 @@ class Player(pygame.sprite.Sprite):
         Updates player character.
         """
         self.check_feet()   # Player checks the ground at their current coordinate
-
+        self.check_invulnerability()
         if self.movement_start == self.movement_end:    # No current movement
-
             # Reset variables from previous movement; update player relative coordinate
             self.rel_x += self.x_change
             self.rel_y += self.y_change
@@ -95,9 +99,15 @@ class Player(pygame.sprite.Sprite):
             if self.is_collision('x') or self.is_collision('y'):
                 self.cancel_movement()
                 return
-
         elif self.movement_start != self.movement_end:      # Movement currently in motion
             self.animate_movement()
+
+    def check_invulnerability(self):
+        """
+        Monitors the players invulnerability status.
+        """
+        if self.invulnerability_timer < pygame.time.get_ticks():
+            self.invulnerable = False
 
     def cancel_movement(self):
         """
@@ -132,23 +142,21 @@ class Player(pygame.sprite.Sprite):
         If no input, resets player animation to stationary.
         """
         keys = pygame.key.get_pressed()
+        self.movement_end += PLAYER_SPEED
         if keys[pygame.K_LEFT]:
             self.x_change -= PLAYER_SPEED
-            self.movement_end += PLAYER_SPEED
             self.facing = LEFT
         elif keys[pygame.K_RIGHT]:
             self.x_change += PLAYER_SPEED
-            self.movement_end += PLAYER_SPEED
             self.facing = RIGHT
         elif keys[pygame.K_DOWN]:
             self.y_change += PLAYER_SPEED
-            self.movement_end += PLAYER_SPEED
             self.facing = DOWN
         elif keys[pygame.K_UP]:
             self.y_change -= PLAYER_SPEED
-            self.movement_end += PLAYER_SPEED
             self.facing = UP
         else:
+            self.movement_end -= PLAYER_SPEED
             self.stationary()
 
     def is_collision(self, direction):
@@ -238,13 +246,14 @@ class Player(pygame.sprite.Sprite):
         """
         Looks for items at player coordinate.
         """
-        items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
-
-        if self.game.loc.data[self.rel_y//32][self.rel_x//32] in items:
+        if self.game.loc.data[self.rel_y//32][self.rel_x//32] in ITEM_CODES:
             self.game.loc.data[self.rel_y//32][self.rel_x//32] = '.'
             self.game.loc.fruit -= 1
 
     def check_facing_tile(self):
+        """
+        Attempts to interact with the tile the player is facing.
+        """
         tile = self.get_facing_tile()
         if self.game.loc.data[tile[0]//32][tile[1]//32] == 'S':
             if self.game.shop is None:
@@ -252,6 +261,9 @@ class Player(pygame.sprite.Sprite):
             self.game.trade()
 
     def get_facing_tile(self):
+        """
+        Returns the coordinates of the tile the player is facing.
+        """
         if self.facing == UP:
             return self.rel_y - 32, self.rel_x
         elif self.facing == DOWN:
@@ -260,6 +272,22 @@ class Player(pygame.sprite.Sprite):
             return self.rel_y, self.rel_x + 32
         elif self.facing == LEFT:
             return self.rel_y, self.rel_x - 32
+
+    def use_power(self):
+        """
+        The player uses their current power up.
+        """
+        if self.game.power_up == 7:     # Ice cream - fruit multiplier
+            for key in self.game.fruit_count:
+                self.game.fruit_count[key] = self.game.fruit_count[key] * 2
+        elif self.game.power_up == 8:   # Drink - eats all the fruit
+            for fruit in self.game.all_items:
+                fruit.eat_without_touch()
+        elif self.game.power_up == 9 and self.game.lives != 5:   # Candy - add a life
+            self.game.lives += 1
+        else:
+            self.game.play_sound(ERROR)
+        self.game.power_up = 0
 
     def kill_player(self):
         """
@@ -271,6 +299,9 @@ class Player(pygame.sprite.Sprite):
         self.game.player_death()
 
     def use_door(self, door):
+        """
+        The player uses a door to enter a new dungeon room.
+        """
         if door in self.game.locked_doors:  # Locked door; cannot use
             return
         elif door in self.game.unopened_doors:  # Unopened door; remove from unopened_doors
@@ -279,6 +310,9 @@ class Player(pygame.sprite.Sprite):
 
 
 class NPC(pygame.sprite.Sprite):
+    """
+    Represents a non-player character.
+    """
     def __init__(self, game):
         self.game = game
         self.groups = self.game.all_sprites, self.game.blocks
@@ -287,6 +321,9 @@ class NPC(pygame.sprite.Sprite):
 
 
 class ShopKeep(NPC):
+    """
+    Represents NPC who sells the player upgrades and powers.
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self.x = x * TILE_SIZE
@@ -322,6 +359,9 @@ class ShopKeep(NPC):
 
 
 class Enemy(pygame.sprite.Sprite):
+    """
+    Represents an enemy.
+    """
     def __init__(self, game):
         self.game = game
         self.groups = self.game.all_sprites, self.game.all_enemies
@@ -335,10 +375,10 @@ class Enemy(pygame.sprite.Sprite):
         """
         If enemy hits player, kill player.
         """
-        if self.is_hitting_player() and self.game.invulnerable:
+        if self.is_hitting_player() and self.game.player.invulnerable:
             self.game.play_sound(SAFE)
 
-        if self.is_hitting_player() and not self.game.invulnerable:
+        if self.is_hitting_player() and not self.game.player.invulnerable:
             self.game.play_sound(DAMAGE)
             self.game.player.kill_player()
 
@@ -350,6 +390,9 @@ class Enemy(pygame.sprite.Sprite):
 
 
 class WaddleBug(Enemy):
+    """
+    Represents WaddleBug, a simple enemy who marches back and forth.
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
@@ -526,7 +569,7 @@ class WaddleBug(Enemy):
 
     def defeat(self):
         """
-        Remove enemy from screen.
+        Remove WaddleBug from screen.
         """
         self.image = self.game.enemy_sheet.get_sprite(128, 0, 32, 32)
         self.game.draw()
@@ -535,6 +578,9 @@ class WaddleBug(Enemy):
 
 
 class GrimLeaper(Enemy):
+    """
+    Represents GrimLeaper, an enemy that jumps around in random directions.
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
@@ -694,7 +740,7 @@ class GrimLeaper(Enemy):
 
     def defeat(self):
         """
-        Remove enemy from screen.
+        Remove GrimLeaper from screen.
         """
         self.image = self.game.enemy_sheet.get_sprite(128, 96, 32, 32)
         self.game.draw()
@@ -703,6 +749,10 @@ class GrimLeaper(Enemy):
 
 
 class WaitWatch(Enemy):
+    """
+    Represents WaitWatch, an enemy who will kill the player if the player enters
+    its line of sight.
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
@@ -781,14 +831,14 @@ class WaitWatch(Enemy):
 
     def change_direction(self):
         """
-        Randomly select a new direction for GrimLeaper
+        Randomly select a new direction for WaitWatch
         """
         i = int(rd.random() * len(self.directions))
         self.facing = self.directions[i]
 
     def stationary(self):
         """
-        Resets GrimLeaper's sprite to stationary
+        Resets WaitWatch's sprite to stationary
         """
         if self.facing == DOWN:
             self.image = self.game.enemy_sheet.get_sprite(0, 160, self.width, self.height)
@@ -801,6 +851,9 @@ class WaitWatch(Enemy):
         self.watching = True
 
     def is_watching(self):
+        """
+        Returns true if WaitWatch's eyes is open, false otherwise.
+        """
         return self.watching
 
     def collide_block(self):
@@ -827,11 +880,14 @@ class WaitWatch(Enemy):
         return True if hits else False
 
     def collision(self, object):
+        """
+        Returns true if collision, false otherwise.
+        """
         return pygame.sprite.spritecollide(self, object, False)
 
     def animate_movement(self):
         """
-        Animate GrimLeaper movement.
+        Animate WaitWatch's movement.
         """
         if self.facing == DOWN:
             self.move_down()
@@ -845,7 +901,7 @@ class WaitWatch(Enemy):
 
     def move_down(self):
         """
-        Move WaddleBug down
+        Move WaitWatch down
         """
         if self.movement_start < self.animation_frame:
             self.image = self.game.enemy_sheet.get_sprite(0, 192, self.width, self.height)
@@ -855,7 +911,7 @@ class WaitWatch(Enemy):
 
     def move_up(self):
         """
-        Move WaddleBug up
+        Move WaitWatch up
         """
         if self.movement_start < self.animation_frame:
             self.image = self.game.enemy_sheet.get_sprite(32, 192, self.width, self.height)
@@ -865,7 +921,7 @@ class WaitWatch(Enemy):
 
     def move_left(self):
         """
-        Move WaddleBug left
+        Move WaitWatch left
         """
         if self.movement_start < self.animation_frame:
             self.image = self.game.enemy_sheet.get_sprite(64, 192, self.width, self.height)
@@ -875,7 +931,7 @@ class WaitWatch(Enemy):
 
     def move_right(self):
         """
-        Move WaddleBug right
+        Move WaitWatch right
         """
         if self.movement_start < self.animation_frame:
             self.image = self.game.enemy_sheet.get_sprite(96, 192, self.width, self.height)
@@ -884,18 +940,24 @@ class WaitWatch(Enemy):
         self.rect.x += self.speed
 
     def in_eyeshot(self):
+        """
+        Returns true if the player is in WaitWatch's eyeshot, false otherwise.
+        """
         if self.watching:
             if self.facing == DOWN:
-                return self.look_for_player('y', 32)
+                return self.see_player('y', 32)
             elif self.facing == UP:
-                return self.look_for_player('y', -32)
+                return self.see_player('y', -32)
             elif self.facing == LEFT:
-                return self.look_for_player('x', -32)
+                return self.see_player('x', -32)
             elif self.facing == RIGHT:
-                return self.look_for_player('x', 32)
+                return self.see_player('x', 32)
         return False
 
-    def look_for_player(self, direction, amount):
+    def see_player(self, direction, amount):
+        """
+        Returns true if WaitWatch can see the player, false otherwise.
+        """
         if direction == 'x':
             for tile in range(1, 6):
                 self.rect.x += tile * amount
@@ -912,7 +974,7 @@ class WaitWatch(Enemy):
 
     def defeat(self):
         """
-        Remove enemy from screen.
+        Remove WaitWatch from screen.
         """
         self.image = self.game.enemy_sheet.get_sprite(128, 160, 32, 32)
         self.game.draw()
@@ -921,6 +983,9 @@ class WaitWatch(Enemy):
 
 
 class FriendEater(Enemy):
+    """
+    Represents FriendEater, an enemy that spreads poison as it wanders the dungeon.
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
@@ -1020,6 +1085,9 @@ class FriendEater(Enemy):
         return True if hits else False
 
     def collision(self, object):
+        """
+        Return true if collsion, false otherwise.
+        """
         return pygame.sprite.spritecollide(self, object, False)
 
     def animate_movement(self):
@@ -1120,7 +1188,7 @@ class FriendEater(Enemy):
 
     def defeat(self):
         """
-        Remove enemy from screen.
+        Remove FriendEater from screen.
         """
         self.image = self.game.enemy_sheet.get_sprite(128, 288, 32, 32)
         self.game.draw()
@@ -1129,6 +1197,9 @@ class FriendEater(Enemy):
 
 
 class ZipperMouth(Enemy):
+    """
+    Represents ZipperMouth, an enemy who relentlessly pursues the player.
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = PLAYER_LAYER
@@ -1184,7 +1255,7 @@ class ZipperMouth(Enemy):
 
     def update(self):
         """
-        Update FriendEater
+        Update ZipperMouth
         """
         self.collide_player()
         if self.movement_start == self.movement_end and self.movement_delay < pygame.time.get_ticks():
@@ -1199,16 +1270,9 @@ class ZipperMouth(Enemy):
                 self.target = self.get_player_location()
                 self.facing = self.get_next_direction()
 
-    def change_direction(self):
-        """
-        Randomly select a new direction for FriendEater
-        """
-        i = int(rd.random() * len(self.directions))
-        self.facing = self.directions[i]
-
     def collide_block(self):
         """
-        Detects if FriendEater has collided with block.
+        Detects if ZipperMouth has collided with block.
         """
         hits = None
         if self.facing == UP:
@@ -1230,11 +1294,14 @@ class ZipperMouth(Enemy):
         return True if hits else False
 
     def collision(self, object):
+        """
+        Return true if collision, false otherwise
+        """
         return pygame.sprite.spritecollide(self, object, False)
 
     def animate_movement(self):
         """
-        Animate FriendEater movement.
+        Animate ZipperMouth movement.
         """
         if self.facing == DOWN:
             self.move_down()
@@ -1248,7 +1315,7 @@ class ZipperMouth(Enemy):
 
     def stationary(self):
         """
-        Resets FriendEater's sprite to stationary
+        Resets ZipperMouth's sprite to stationary
         """
         if self.facing == DOWN:
             self.image = self.down_animations[0]
@@ -1261,7 +1328,7 @@ class ZipperMouth(Enemy):
 
     def move_down(self):
         """
-        Move FriendEater down
+        Move ZipperMouth down
         """
         if self.movement_start < self.animation_frame_1:
             self.image = self.down_animations[1]
@@ -1275,7 +1342,7 @@ class ZipperMouth(Enemy):
 
     def move_up(self):
         """
-        Move FriendEater up
+        Move ZipperMouth up
         """
         if self.movement_start < self.animation_frame_1:
             self.image = self.up_animations[1]
@@ -1289,7 +1356,7 @@ class ZipperMouth(Enemy):
 
     def move_left(self):
         """
-        Move FriendEater left
+        Move ZipperMouth left
         """
         if self.movement_start < self.animation_frame_1:
             self.image = self.left_animations[1]
@@ -1303,7 +1370,7 @@ class ZipperMouth(Enemy):
 
     def move_right(self):
         """
-        Move FriendEater right
+        Move ZipperMouth right
         """
         if self.movement_start < self.animation_frame_1:
             self.image = self.right_animations[1]
@@ -1317,7 +1384,7 @@ class ZipperMouth(Enemy):
 
     def update_relative_pos(self):
         """
-        Updates FriendEater's relative position.
+        Updates ZipperMouth's relative position.
         """
         if self.facing == UP:
             self.rel_y -= 32
@@ -1329,9 +1396,15 @@ class ZipperMouth(Enemy):
             self.rel_x -= 32
 
     def get_player_location(self):
+        """
+        Returns the player's current location.
+        """
         return self.game.player.rel_y // 32, self.game.player.rel_x // 32
 
     def get_next_direction(self):
+        """
+        Returns ZipperMouth's next direction based on where the player is currently.
+        """
         curr = self.rel_y // 32, self.rel_x // 32
         possible = []
         if self.target[0] > curr[0]:
@@ -1349,7 +1422,7 @@ class ZipperMouth(Enemy):
 
     def defeat(self):
         """
-        Remove enemy from screen.
+        Remove ZipperMouth from screen.
         """
         self.image = self.game.enemy_sheet.get_sprite(128, 384, 32, 32)
         self.game.draw()
@@ -1357,67 +1430,10 @@ class ZipperMouth(Enemy):
         self.game.friend_eater = None
 
 
-# class Spawner(pygame.sprite.Sprite):
-#     def __init__(self, game, x, y):
-#         self.game = game
-#         self.groups = self.game.all_sprites
-#         pygame.sprite.Sprite.__init__(self, self.groups)
-#
-#         self._layer = PLAYER_LAYER
-#         self.x = x * TILE_SIZE
-#         self.y = y * TILE_SIZE
-#         self.width = TILE_SIZE
-#         self.height = TILE_SIZE
-#         self.image = self.game.terrain_sheet.get_sprite(64, 0, self.width, self.height)
-#         self.image.set_colorkey(NASTY_GREEN)
-#         self.rect = self.image.get_rect()
-#         self.rect.x = self.x
-#         self.rect.y = self.y
-#
-#         self.data = self.generate_data()
-#         self.timer = self.set_timer()
-#
-#     def update(self):
-#         if self.timer < pygame.time.get_ticks():
-#             self.timer = self.set_timer()
-#             self.spawn()
-#
-#     def generate_data(self):
-#         if self.game.level == 1:
-#             return {0: 'Ezm', 5: 'Eww', 10: 'Efe', 50: 'Egl', 100: 'Ewb'}
-#         elif self.game.level == 2:
-#             return {5: 'Ezm', 10: 'Eww', 30: 'Efe', 60: 'Egl', 100: 'Ewb'}
-#         elif self.game.level == 3:
-#             return {10: 'Ezm', 30: 'Eww', 50: 'Efe', 70: 'Egl', 100: 'Ewb'}
-#         elif self.game.level == 4:
-#             return {20: 'Ezm', 40: 'Eww', 60: 'Efe', 80: 'Egl', 100: 'Ewb'}
-#
-#     def set_timer(self):
-#         if self.game.level == 1:
-#             return pygame.time.get_ticks() + 4000
-#         elif self.game.level == 2:
-#             return pygame.time.get_ticks() + 3000
-#         elif self.game.level == 3:
-#             return pygame.time.get_ticks() + 2000
-#         elif self.game.level == 4:
-#             return pygame.time.get_ticks() + 1000
-#
-#     def spawn(self):
-#         seed = int(rd.random() * 100)
-#         for key in self.data:
-#             if seed <= key:
-#                 if self.data[key] == 'Efe':
-#                     new_enemy = self.game.friend_eater = FriendEater(self.game,
-#                                                                      self.x//32 - self.game.player.rel_x//32,
-#                                                                      self.x//32 - self.game.player.rel_x//32)
-#                 else:
-#                     new_enemy = self.game.sprite_key[self.data[key]](self.game,
-#                                                                      self.x//32 - self.game.player.rel_x//32,
-#                                                                      self.x//32 - self.game.player.rel_x//32)
-#                 break
-
-
 class Block(pygame.sprite.Sprite):
+    """
+    Represents a non-player area.
+    """
     def __init__(self, game, x, y):
         self.game = game
         self._layer = BLOCK_LAYER
@@ -1438,6 +1454,9 @@ class Block(pygame.sprite.Sprite):
 
 
 class Ground(pygame.sprite.Sprite):
+    """
+    Represents a tile the player can walk.
+    """
     def __init__(self, game, x, y):
         self.game = game
         self._layer = GROUND_LAYER
@@ -1459,50 +1478,44 @@ class Ground(pygame.sprite.Sprite):
         self.poisoned_timer = 0
 
     def update(self):
-        if self.touched_by_friendeater() and self.poisoned is False:
+        """
+        Update the ground sprite.
+        """
+        if self.is_hitting_friendeater() and self.poisoned is False:
             self.image = self.game.terrain_sheet.get_sprite(32, 0, self.width, self.height)
             self.poisoned = True
-            self.poisoned_timer = pygame.time.get_ticks() + 10000
+            self.poisoned_timer = pygame.time.get_ticks() + 5000
         elif self.poisoned_timer < pygame.time.get_ticks() and self.poisoned is True:
             self.image = self.game.terrain_sheet.get_sprite(0, 0, self.width, self.height)
             self.poisoned = False
-
-        if self.is_hitting_player() and self.is_poisoned() and self.game.invulnerable is False:
+        if self.is_hitting_player() and self.is_poisoned() and self.game.player.invulnerable is False:
             self.game.play_sound(DAMAGE)
             self.game.player.kill_player()
 
-    def touched_by_friendeater(self):
+    def is_hitting_friendeater(self):
+        """
+        Returns true if collision with friendeater, false otherwise
+        """
         if isinstance(self.game.friend_eater, pygame.sprite.Sprite):
             return pygame.sprite.collide_rect(self.game.friend_eater, self)
 
     def is_hitting_player(self):
+        """
+        Returns true if collision with player, false otherwise
+        """
         return pygame.sprite.collide_rect(self.game.player, self)
 
     def is_poisoned(self):
+        """
+        Returns true if ground is poisoned.
+        """
         return self.poisoned
 
 
-class Poison(pygame.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.game = game
-        self._layer = GROUND_LAYER
-        self.groups = self.game.all_sprites
-        pygame.sprite.Sprite.__init__(self, self.groups)
-
-        self.x = x * TILE_SIZE
-        self.y = y * TILE_SIZE
-        self.width = TILE_SIZE
-        self.height = TILE_SIZE
-
-        self.image = self.game.terrain_sheet.get_sprite(32, 0, self.width, self.height)
-        self.image.set_colorkey(NASTY_GREEN)
-
-        self.rect = self.image.get_rect()
-        self.rect.x = self.x
-        self.rect.y = self.y
-
-
 class Door(pygame.sprite.Sprite):
+    """
+    Represents a dungeon door.
+    """
     def __init__(self, game, x, y, n, locked, unopened):
         self.game = game
         self._layer = GROUND_LAYER
@@ -1557,9 +1570,12 @@ class Door(pygame.sprite.Sprite):
 
 
 class Item(pygame.sprite.Sprite):
+    """
+    Represents a item.
+    """
     def __init__(self, game):
         self.game = game
-        self.groups = self.game.all_sprites
+        self.groups = self.game.all_sprites, self.game.all_items
         pygame.sprite.Sprite.__init__(self, self.groups)
 
     def update(self):
@@ -1572,8 +1588,17 @@ class Item(pygame.sprite.Sprite):
             self.kill()
             self.game.fruit_count[self.code] += 1
 
+    def eat_without_touch(self):
+        pygame.mixer.Sound.play(EAT)
+        self.kill()
+        self.game.fruit_count[self.code] += 1
+        self.game.loc.fruit -= 1
+
 
 class Cherry(Item):
+    """
+    Represents a cherry
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = GROUND_LAYER
@@ -1595,6 +1620,9 @@ class Cherry(Item):
 
 
 class Banana(Item):
+    """
+    Represents a banana
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = GROUND_LAYER
@@ -1616,6 +1644,9 @@ class Banana(Item):
 
 
 class Melon(Item):
+    """
+    Represents a melon
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = GROUND_LAYER
@@ -1637,6 +1668,9 @@ class Melon(Item):
 
 
 class Grape(Item):
+    """
+    Represents a grape
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = GROUND_LAYER
@@ -1658,6 +1692,9 @@ class Grape(Item):
 
 
 class Orange(Item):
+    """
+    Represents an orange
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = GROUND_LAYER
@@ -1679,6 +1716,9 @@ class Orange(Item):
 
 
 class Apple(Item):
+    """
+    Represents an apple.
+    """
     def __init__(self, game, x, y):
         super().__init__(game)
         self._layer = GROUND_LAYER

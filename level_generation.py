@@ -11,10 +11,16 @@ class MapTree:
         self.head = None
         
     def get_head(self):
+        """
+        Returns the head of the maptree.
+        """
         return self.head
     
-    def set_head(self, head):
-        self.head = head
+    def set_head(self, node):
+        """
+        Sets given node as the head of the maptree.
+        """
+        self.head = node
 
 
 class MapNode:
@@ -32,45 +38,70 @@ class MapNode:
     # Getters and setters    
     
     def get_num(self):
+        """
+        Returns the map number.
+        """
         return self.num
     
     def get_data(self):
+        """
+        Returns map data.
+        """
         return self.data
     
     def get_bridges(self):
+        """
+        Returns bridge data.
+        """
         return self.bridges
+
+    def get_fruit_count(self):
+        """
+        Returns the current fruit count.
+        """
+        return self.fruit
     
     # Incrementers and decrementers
     
     def decrement_fruit(self):
+        """
+        Decrements the fruit counter by 1.
+        """
         self.fruit -= 1
         
     # Status functions
     
     def is_empty_fruit(self):
+        """
+        Returns true if no fruit, else false.
+        """
         return self.fruit == 0
         
     def is_clear(self):
+        """
+        Returns true if room cleared, false otherwise.
+        """
         return self.cleared
-    
-    # Modify map
-    
-    def set_player(self, player):
-        pass
 
 
 class BridgeNode:
     """
     Represents a link between two dungeon rooms.
     """
-    def __init__(self, room, spawn):
-        self.room = room
+    def __init__(self, node, spawn):
+        self.node = node
         self.spawn = spawn
         
-    def get_room(self):
-        return self.room
+    def get_node(self):
+        """
+        Returns the connected node.
+        """
+        return self.node
     
     def get_spawn(self):
+        """
+        Returns the player spawn in the connected node.
+        """
         return self.spawn
 
 
@@ -92,9 +123,7 @@ def generate_starting_maps(game):
     bridge_2 = BridgeNode(node_1, door_data_1[0])   # Bridge from door 1 -> 0
     node_1.bridges[0] = bridge_1
     node_2.bridges[1] = bridge_2
-
     node_2.bridges[2] = door_data_2[2]  # Set door 2 to spawn coordinates temporarily
-
     return node_1, player
 
 
@@ -104,62 +133,70 @@ def generate_next_maps(game, current):
     """
     game.decrement_paths()
     dead_seed = get_dead_end_probability(game)
-
     for i, key in enumerate(current.bridges):   # Create as many rooms as there are unlinked doors
         if i == 0:      # Always skip first door - already bridged
             continue
-
-        if game.depth == 8:
+        if game.depth == 99:
             generate_end_room(game, current, key)
             continue
-
         seed = rd.random() * 100
         if seed > dead_seed:
-            pass
-            # dead_end(current, key, game)
-            # continue
+            dead_end(current, key, game)
+            continue
 
-        node = new_map(game, get_random_dimensions(game), False)    # New dungeon
-        door_data = {}
-        corners = get_corners(node.dimensions)
-        d_num, d_coord = create_door(node, door_data, corners, game)    # First door
-        node.data[d_coord[0]][d_coord[1]] = d_num
-        game.unopened_doors.pop()
-
-        bridge_1 = BridgeNode(node, door_data[d_num])   # Connect first door to current room
-        ret_spawn = current.bridges[key]
-        current.bridges[key] = bridge_1
-        bridge_2 = BridgeNode(current, ret_spawn)
-        node.bridges[d_num] = bridge_2
-
-        for i in range(0, get_total_doors()):   # Create up to three more doors
-            d_num, d_coord = create_door(node, door_data, corners, game)
-            node.data[d_coord[0]][d_coord[1]] = d_num
-            node.bridges[d_num] = door_data[d_num]
-            game.increment_paths()
-
+        node, d_num, d_coord, door_data, corners = new_room_with_door(game)
+        connect_new_room(node, door_data, d_num, current, key)
+        add_doors(node, door_data, corners, game)
     return current
 
 
-def generate_end_room(game, current, key):
-    node = new_map(game, (50, 50), False)  # New dungeon
+def new_room_with_door(game, dimensions=None, empty=False):
+    """
+    Creates a new map node with one door.
+    """
+    if dimensions is None:
+        dimensions = get_random_dimensions(game)
+    node = new_map(game, dimensions, empty)  # New dungeon
     door_data = {}
     corners = get_corners(node.dimensions)
-    d_num, d_coord = create_door(node, door_data, corners, game)  # First door
+    d_num, d_coord = create_door(door_data, corners, game)  # First door
     node.data[d_coord[0]][d_coord[1]] = d_num
     game.unopened_doors.pop()
+    return node, d_num, d_coord, door_data, corners
 
+
+def connect_new_room(node, door_data, d_num, current, key):
+    """
+    Connects a new node to the current node with a bridge.
+    """
     bridge_1 = BridgeNode(node, door_data[d_num])  # Connect first door to current room
     ret_spawn = current.bridges[key]
     current.bridges[key] = bridge_1
     bridge_2 = BridgeNode(current, ret_spawn)
     node.bridges[d_num] = bridge_2
 
-    for i in range(0, 1):  # Create up to three more doors
-        d_num, d_coord = create_door(node, door_data, corners, game)
+
+def add_doors(node, door_data, corners, game):
+    """
+    Adds a random number of doors (between 1 -3 more) to the new map node.
+    """
+    for i in range(0, get_total_doors()):  # Create up to three more doors
+        d_num, d_coord = create_door(door_data, corners, game)
         node.data[d_coord[0]][d_coord[1]] = d_num
         node.bridges[d_num] = door_data[d_num]
         game.increment_paths()
+
+
+def generate_end_room(game, current, key):
+    """
+    Creates the final map oof the game.
+    """
+    node, d_num, d_coord, door_data, corners = new_room_with_door(game, (50, 50))
+    connect_new_room(node, door_data, d_num, current, key)
+    d_num, d_coord = create_door(door_data, corners, game)
+    node.data[d_coord[0]][d_coord[1]] = d_num
+    node.bridges[d_num] = door_data[d_num]
+    game.increment_paths()
 
 
 def get_dead_end_probability(game):
@@ -171,13 +208,13 @@ def get_dead_end_probability(game):
     elif 3 <= game.paths < 5:
         return 90
     elif 5 <= game.paths < 7:
-        return 70
+        return 80
     elif 7 <= game.paths < 9:
-        return 50
+        return 70
     elif 9 <= game.paths < 11:
-        return 30
+        return 60
     else:
-        return 10
+        return 50
 
 
 def dead_end(current, key, game):
@@ -191,31 +228,22 @@ def dead_end(current, key, game):
 
 
 def empty_dead_end(current, key, game):
-    node = new_map(game, (5 + 24, 5 + 24), True)  # New dungeon
-    door_data = {}
-    corners = get_corners(node.dimensions)
-    d_num, d_coord = create_door(node, door_data, corners, game)  # First door
-    node.data[d_coord[0]][d_coord[1]] = d_num
-    game.unopened_doors.pop()
-
-    bridge_1 = BridgeNode(node, door_data[d_num])  # Connect first door to current room
-    ret_spawn = current.bridges[key]
-    current.bridges[key] = bridge_1
-    bridge_2 = BridgeNode(current, ret_spawn)
-    node.bridges[d_num] = bridge_2
+    """
+    Creates an empty dead end room.
+    """
+    node, d_num, d_coord, door_data, corners = new_room_with_door(game, (5 + 24, 5 + 24), True)
+    connect_new_room(node, door_data, d_num, current, key)
     return node
 
 
 def treasure_dead_end(node):
-    items = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
+    """
+    Fills an empty dead end room with fruit.
+    """
     for i, row in enumerate(node.data):
         for j, col in enumerate(node.data):
             if node.data[i][j] == '.':
-                node.data[i][j] = items[math.floor(rd.random() * 6)]
-
-
-def survival_dead_end(node, game):
-    place_enemies(node.data, 5 + 24, 5 + 24, game)
+                node.data[i][j] = ITEM_CODES[math.floor(rd.random() * 6)]
 
 
 def new_map(game, dimensions, empty):
@@ -241,7 +269,7 @@ def create_first_node(game):
     corners = get_corners(node.dimensions)
     node.data[corners[1][0]][corners[1][1]] = 'S'
     door_data = {}
-    d_num, d_coord = create_door(node, door_data, [corners[-1]], game)
+    d_num, d_coord = create_door(door_data, [corners[-1]], game)
     node.data[d_coord[0]][d_coord[1]] = d_num
     player = create_player_spawn(node)
     return node, door_data, player
@@ -254,10 +282,10 @@ def create_second_node(game):
     node = new_map(game, get_random_dimensions(game), True)
     corners = get_corners(node.dimensions)
     door_data = {}
-    d_num, d_coord = create_door(node, door_data, [corners[-1]], game)
+    d_num, d_coord = create_door(door_data, [corners[-1]], game)
     node.data[d_coord[0]][d_coord[1]] = d_num
     game.unopened_doors.pop()
-    d_num, d_coord = create_door(node, door_data, [corners[-2]], game)
+    d_num, d_coord = create_door(door_data, [corners[-2]], game)
     node.data[d_coord[0]][d_coord[1]] = d_num
     return node, door_data
 
@@ -275,7 +303,7 @@ def get_total_doors():
     return doors
 
 
-def create_door(node, door_data, corners, game):
+def create_door(door_data, corners, game):
     """
     Gets new door number and door spawn point.
     """
@@ -342,6 +370,9 @@ def place_enemies(matrix, rows, columns, game):
 
 
 def get_enemy(game):
+    """
+    Returns a random enemy code with probabilities based on the current player level.
+    """
     probability = {}
     if game.level == 1:
         probability = {0: 'Ezm', 5: 'Eww', 10: 'Efe', 50: 'Egl', 100: 'Ewb'}
@@ -352,9 +383,8 @@ def get_enemy(game):
     elif game.level == 4:
         probability = {30: 'Ezm', 60: 'Eww', 80: 'Efe', 90: 'Egl', 100: 'Ewb'}
 
-    seed = int(rd.random() * 100)
     for key in probability:
-        if seed <= key:
+        if int(rd.random() * 100) <= key:
             return probability[key]
     return '.'
 
