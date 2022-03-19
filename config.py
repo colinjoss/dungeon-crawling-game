@@ -36,7 +36,7 @@ REG = [-1, -1, 24, 49, 74, 99]
 BACKGROUND = ['beach', 'space', 'mountain', 'garden', 'void']
 HOME = 'img/bg/shore.jpg'
 
-MENU_MUSIC = 'sound/music/menu.mp3'
+MENU_MUSIC = 'sound/music/space.mp3'
 OCEAN = 'sound/music/ocean.mp3'
 SHOP = 'sound/music/shop.mp3'
 HUZZAH = 'sound/music/menu_old.mp3'
@@ -64,3 +64,8 @@ SMALL_FONT = pygame.font.Font('font/PressStart2P-Regular.ttf', 16)
 
 WORLDS = ['desert', 'forest', 'ocean', 'mountain']
 ITEM_CODES = ['Ch', 'Ba', 'Me', 'Gr', 'Or', 'Ap']
+
+LV1_ENEMY = {0: 'Ezm', 5: 'Eww', 10: 'Efe', 50: 'Egl', 100: 'Ewb'}
+LV2_ENEMY = {10: 'Ezm', 20: 'Eww', 40: 'Efe', 70: 'Egl', 100: 'Ewb'}
+LV3_ENEMY = {20: 'Ezm', 40: 'Eww', 60: 'Efe', 80: 'Egl', 100: 'Ewb'}
+LV4_ENEMY = {30: 'Ezm', 60: 'Eww', 80: 'Efe', 90: 'Egl', 100: 'Ewb'}

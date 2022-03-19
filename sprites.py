@@ -1,9 +1,5 @@
-import pygame
 from config import *
-import level_generation as level
-import math
 import random as rd
-import time
 
 
 class SpriteSheet:

@@ -1,14 +1,15 @@
 # Author: Colin Joss
 # Last date updated: 3/8/2022
 
-import pygame
-from config import *
 from sprites import *
 import level_generation as level
 import rpyc
 
 
 def sequence():
+    """
+    Generator function. Returns next number in incremental sequence, starting with 0.
+    """
     n = 0
     while True:
         yield n
@@ -81,8 +82,6 @@ class Game:
                            'Ap': Apple
                            }
 
-    # Getters and setters
-
     def set_bg(self, new_bg):
         """
         Sets the background to the given image.
@@ -94,8 +93,6 @@ class Game:
         Sets the player location to the given mapnode.
         """
         self.loc = new_loc
-
-    # Incrementers and decrementers
 
     def increment_level(self):
         """
@@ -157,15 +154,11 @@ class Game:
         """
         self.current_lives -= 1
 
-    # Adders and removers
-
     def add_to_visited(self, door):
         """
         Adds a door number to the visited array.
         """
         self.visited.append(door)
-
-    # All the other junk
 
     def reset(self):
         """
@@ -542,27 +535,51 @@ class Game:
         """
         Displays the instructions to the user.
         """
+        page = 1
         while True:
             self.screen.fill((0, 0, 0))
             self.blit_big_text('R U L E S', 'white', (336, 80))
-            self.blit_rules()
+            self.blit_rules(page)
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.play_sound(SELECT)
                         return
+                    if event.key == pygame.K_z:
+                        page = 2
+
             pygame.display.update()
 
-    def blit_rules(self):
+    def blit_rules(self, page):
         """
         Blits the game's rules to the screen.
         """
+        if page == 1:
+            self.blit_rules_page_1()
+        if page == 2:
+            self.blit_rules_page_2()
+
+    def blit_rules_page_1(self):
+        """
+        Displays part 1 of the rules
+        """
         self.blit_small_text('EXPLORE A SPRAWLING DUNGEON', 'white', (336, 160))
-        self.blit_small_text('EAT THE FRUIT TO PROCEED', 'white', (336, 200))
+        self.blit_small_text('COLLECT FRUIT TO LEVEL UP', 'white', (336, 200))
         self.blit_small_text('AVOID 5 UNIQUE ENEMIES', 'white', (336, 240))
-        self.blit_small_text('BUY UPGRADES AND POWERS', 'white', (336, 280))
-        self.blit_small_text('Z TO INTERACT', 'blue', (336, 320))
-        self.blit_small_text('A TO USE POWER UP', 'blue', (336, 360))
+        self.blit_small_text('BUY ITEMS WITH YOUR FRUIT', 'white', (336, 280))
+        self.blit_small_text('CAN YOU REACH THE END?', 'white', (336, 320))
+        self.blit_small_text('PRESS Z TO READ MORE', 'red', (336, 360))
+
+    def blit_rules_page_2(self):
+        """
+        Displays part 2 of the rules
+        """
+        self.blit_small_text('POWER UPS:', 'white', (336, 160))
+        self.blit_small_text('ICE CREAM DOUBLES YOUR FRUIT', 'white', (336, 200))
+        self.blit_small_text('COCKTAIL CLEARS THE ROOM', 'white', (336, 240))
+        self.blit_small_text('LOLLIPOP GRANTS EXTRA LIFE', 'white', (336, 280))
+        self.blit_small_text('A TO USE POWER UP', 'blue', (336, 320))
+        self.blit_small_text('Z TO INTERACT', 'blue', (336, 360))
         self.blit_small_text('ARROW KEYS TO MOVE', 'blue', (336, 400))
         self.blit_small_text('PRESS ESC TO RETURN TO MENU', 'red', (336, 440))
 
@@ -612,7 +629,7 @@ class Game:
         """
         Returns a new shop object.
         """
-        return Shop(self)
+        return GameShop(self)
 
     def trade(self):
         """
@@ -622,7 +639,7 @@ class Game:
         self.shop.menu()
 
 
-class Shop:
+class GameShop:
     def __init__(self, game):
         self.game = game
 
@@ -734,13 +751,13 @@ class Shop:
         """
         Puts a life shard in stock.
         """
-        return Trade(self.game, int(rd.random() * 6), 6)
+        return GameShopTrade(self.game, int(rd.random() * 6), 6)
 
     def stock_power_up(self):
         """
         Puts a random power up in stock.
         """
-        return Trade(self.game, int(rd.random() * 6), 7 + int(rd.random() * 3))
+        return GameShopTrade(self.game, int(rd.random() * 6), 7 + int(rd.random() * 3))
 
     def is_shop_full(self):
         """
@@ -755,7 +772,7 @@ class Shop:
         return self.game.total_lives == 5
 
 
-class Trade:
+class GameShopTrade:
     def __init__(self, game, cost_code, ret_code):
         self.game = game
         self.cost_code = cost_code

@@ -375,13 +375,13 @@ def get_enemy(game):
     """
     probability = {}
     if game.level == 1:
-        probability = {0: 'Ezm', 5: 'Eww', 10: 'Efe', 50: 'Egl', 100: 'Ewb'}
+        probability = LV1_ENEMY
     elif game.level == 2:
-        probability = {10: 'Ezm', 20: 'Eww', 40: 'Efe', 70: 'Egl', 100: 'Ewb'}
+        probability = LV2_ENEMY
     elif game.level == 3:
-        probability = {20: 'Ezm', 40: 'Eww', 60: 'Efe', 80: 'Egl', 100: 'Ewb'}
+        probability = LV3_ENEMY
     elif game.level == 4:
-        probability = {30: 'Ezm', 60: 'Eww', 80: 'Efe', 90: 'Egl', 100: 'Ewb'}
+        probability = LV4_ENEMY
 
     for key in probability:
         if int(rd.random() * 100) <= key:
